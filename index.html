@@ -5,24 +5,6 @@
 <meta name="theme-color" content="#5b4be8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Школьный портал</title>
-<!-- ============ НАСТРОЙКА БАЗЫ ДАННЫХ (Firebase) ============
- Чтобы сайт работал для всех (учителя, родители, ученики с разных телефонов),
- создайте бесплатный проект на https://console.firebase.google.com,
- включите Firestore и вставьте сюда свои данные (см. инструкцию).
- Пока apiKey пустой — сайт работает в ЛОКАЛЬНОМ режиме (данные только в этом браузере). -->
-<script>
-window.FB_CFG={
-  apiKey:"AIzaSyCpdvEU7LFFvp4PF9jzT1ibZemZg7ZtL2A",
-  authDomain:"://firebaseapp.com",
-  projectId:"school-d71de",
-  storageBucket:"school-d71de.firebasestorage.app",
-  messagingSenderId:"1024869489653",
-  appId:"1:1024869489653:web:f7c7742cc68e44afaedebc"
-};
-if(!window.FB_CFG.apiKey||!window.FB_CFG.projectId)window.FB_CFG=null;
-</script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:linear-gradient(135deg,#eef2ff 0%,#fdf2f8 55%,#ecfeff 100%);--card:#fff;--tx:#1e2235;--mut:#6b7390;--ln:#e6e9f5;--ac:#5b4be8;--ac2:#8b5cf6;--acx:#fff;--in:#f6f7fd;--sh:0 8px 28px rgba(80,70,200,.10)}
@@ -121,7 +103,17 @@ button.b,button.s{position:relative;overflow:hidden}button.b:active{transform:sc
 ::selection{background:var(--ac);color:#fff}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .maplink{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:16px;background:linear-gradient(120deg,rgba(34,197,94,.14),rgba(59,130,246,.12));border:1.5px solid var(--ln);color:var(--tx);text-decoration:none;transition:.2s}
-.maplink:hover{transform:translateY(-2px);border-color:var(--ac);box-shadow:var(--sh)}.maplink .mp{font-size:34px;animation:bob 3s ease-in-out infinite}.maplink b{color:var(--ac);text-decoration:underline}
+.maplink:hover{transform:translateY(-2px);border-color:var(--ac);box-shadow:var(--sh)}.maplink .mp{font-size:34px;animation:bob 3s ease-in-out infinite}.maplink b{color:var(--ac);text-decoration:underline}.maplink.es{background:linear-gradient(120deg,rgba(91,75,232,.16),rgba(236,72,153,.12))}
+.hwi{border-color:#f59e0b;background:rgba(245,158,11,.14)}.n.old{opacity:.55}
+.up{display:inline-flex!important;flex:0 0 auto!important;min-width:0!important;width:auto;flex-direction:row!important;align-items:center;gap:8px;background:linear-gradient(120deg,var(--ac),var(--ac2));color:#fff!important;padding:13px 24px;border-radius:14px;cursor:pointer;font-weight:700!important;font-size:16px!important;box-shadow:0 5px 14px rgba(91,75,232,.35);transition:.15s}.up:hover{transform:translateY(-2px)}
+.ck{flex-direction:row!important;align-items:center;gap:10px!important;color:var(--tx)!important;font-size:15px!important;font-weight:500!important;padding:4px 0}input[type=checkbox]{width:auto;accent-color:var(--ac);transform:scale(1.25)}
+.chat{padding:0;overflow:hidden}#chatbox{height:min(52vh,460px);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+.msg{display:flex}.msg.me{justify-content:flex-end}.bub{max-width:80%;background:var(--in);border:1px solid var(--ln);border-radius:16px 16px 16px 4px;padding:8px 12px;overflow-wrap:anywhere}
+.msg.me .bub{background:linear-gradient(120deg,var(--ac),var(--ac2));color:#fff;border-color:transparent;border-radius:16px 16px 4px 16px}
+.mn{font-size:12px;font-weight:700;color:var(--ac);margin-bottom:2px}.msg.me .mn{color:rgba(255,255,255,.85)}.mt{font-size:11px;opacity:.7;text-align:right;margin-top:2px}.mx{border:0;background:none;color:inherit;cursor:pointer;font-size:11px;opacity:.8}
+.dsep{align-self:center;font-size:12px;color:var(--mut);background:var(--in);padding:2px 12px;border-radius:12px;margin:6px 0}
+.cform{display:flex;gap:8px;padding:12px;border-top:1px solid var(--ln);align-items:end}.cform textarea{resize:none;flex:1;max-height:110px}.cform button{padding:12px 18px}
+.nb{background:#ef4444;color:#fff;border-radius:10px;padding:0 7px;font-size:12px;margin-left:6px;font-weight:700}
 </style>
 </head>
 <body>
@@ -131,44 +123,29 @@ button.b,button.s{position:relative;overflow:hidden}button.b:active{transform:sc
 <div id="toast"></div>
 <script>
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const KEYS=['users','auth','secrets','grades','notes','news','sched','signs','settings'];
-let LOCAL=false;
-function localDB(){
- const L={},rd=c=>{try{return JSON.parse(localStorage.getItem('sch_db_'+c)||'{}')}catch(e){return{}}},wr=(c,o)=>localStorage.setItem('sch_db_'+c,JSON.stringify(o));
- const snap=c=>{const o=rd(c);return{docs:Object.keys(o).map(id=>({id,data:()=>o[id]}))}};
- const fire=c=>(L[c]||[]).forEach(f=>f(snap(c)));
- addEventListener('storage',e=>{if(e.key&&e.key.startsWith('sch_db_'))fire(e.key.slice(7))});
- return{collection:c=>({
-  onSnapshot(ok){(L[c]=L[c]||[]).push(ok);setTimeout(()=>ok(snap(c)),0)},
-  doc:id=>({
-   async set(d){const o=rd(c);o[id]=JSON.parse(JSON.stringify(d));wr(c,o);fire(c)},
-   async update(d){const o=rd(c);o[id]={...(o[id]||{}),...JSON.parse(JSON.stringify(d))};wr(c,o);fire(c)},
-   async delete(){const o=rd(c);delete o[id];wr(c,o);fire(c)},
-   async get(){const o=rd(c);return{exists:id in o,data:()=>o[id]}}
-  })})}}
+const KEYS=['users','auth','secrets','grades','notes','news','sched','signs','settings','hw','abs','chat'];
 const S={};KEYS.forEach(k=>S[k]=[]);
 const loaded={};let db=null,sess=null,tab=null,lastTab=null,err='',sync=Date.now(),st={cls:'',kid:'',rf:'all',q:'',sure:''};
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 sess=LS.get('sch_u');let sessH=LS.get('sch_h'),myId='x',UM=new Map(),GB=new Map(),wasClosed=false,raf=0;const SIG={};
 const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
 {const th=LS.get('sch_theme');if(th)document.documentElement.dataset.theme=th}
-const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб'];
+const DAYS=['Пн','Вт','Ср','Чт','Пт'];
 const ROLE={admin:'Создатель',staff:'Администратор',teacher:'Учитель',parent:'Родитель',student:'Ученик'};
 const ICON={admin:'👑',staff:'🛡️',teacher:'👩‍🏫',parent:'👨‍👩‍👧',student:'🎒'};
-const ADM=[['over','📊 Обзор'],['users','👥 Люди и пароли'],['grades','📝 Оценки'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['set','🔧 Техработы']];
+const ADM=[['over','📊 Обзор'],['users','👥 Люди и пароли'],['grades','📝 Оценки'],['hw','📚 Домашка'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат класса'],['set','🔧 Техработы']];
 const TABS={admin:[...ADM,['me','👤 Профиль']],staff:[...ADM,['me','👤 Профиль']],
- teacher:[['grades','📝 Журнал'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['me','👤 Профиль']],
- parent:[['kid','📒 Дневник ребёнка'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['me','👤 Профиль']],
- student:[['diary','📒 Мой дневник'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['me','👤 Профиль']]};
+ teacher:[['grades','📝 Журнал'],['hw','📚 Домашка'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат класса'],['me','👤 Профиль']],
+ parent:[['kid','📒 Дневник ребёнка'],['hw','📚 Домашка'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['me','👤 Профиль']],
+ student:[['diary','📒 Мой дневник'],['hw','📚 Домашка'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат класса'],['me','👤 Профиль']]};
 const PWRE=/^[A-Za-z0-9_.!@#]{4,32}$/,PWHINT='Только латиница, цифры и символы _ . ! @ # — без пробелов, от 4 до 32 знаков';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const TZ='Europe/Minsk';
-const fmt=t=>new Date(t).toLocaleString('ru-RU',{timeZone:TZ,day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+const fmt=t=>new Date(t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
 const gc=v=>v<=3?'r':v<=5?'o':v<=7?'y':v<=9?'l':'g';
 const avg=a=>a.length?(a.reduce((s,x)=>s+x.value,0)/a.length).toFixed(1):'–';
 const mon=ts=>{const d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d};
 const wk=ts=>{const t=mon(ts);t.setDate(t.getDate()+3);const y=t.getFullYear();return y+'-W'+String(Math.ceil(((t-new Date(y,0,1))/864e5+1)/7)).padStart(2,'0')};
-const wr=ts=>{const a=mon(ts),b=new Date(a);b.setDate(b.getDate()+6);const f=d=>d.toLocaleDateString('ru-RU',{timeZone:TZ,day:'numeric',month:'short'});return f(a)+' – '+f(b)};
+const wr=ts=>{const a=mon(ts),b=new Date(a);b.setDate(b.getDate()+6);const f=d=>d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});return f(a)+' – '+f(b)};
 const chip=g=>`<span class="gr ${gc(g.value)}" title="${esc(g.subject)} · ${fmt(g.ts)}${g.comment?' · '+esc(g.comment):''}">${g.value}</span>`;
 const byNick=n=>UM.get(n);
 const me=()=>S.users.find(u=>u.nick===sess);
@@ -186,7 +163,7 @@ async function put(c,id,d){try{await db.collection(c).doc(id).set(d);return true
 async function del(c,id){try{await db.collection(c).doc(id).delete();return true}catch(e){toast('⚠️ Не удалось удалить');return false}}
 async function putSecret(nick,pw){const ref=db.collection('secrets').doc(myId),f={[sk(nick)]:{nick,pw,ts:Date.now()}};const g=await ref.get();if(g.exists)await ref.update(f);else await ref.set(f)}
 async function setPw(nick,pw){const salt=newSalt(),hash=await hashPw(salt,pw);if(!(await put('auth',nick,{salt,hash})))return false;try{await putSecret(nick,pw)}catch(e){}return hash}
-async function canSetup(){return true}
+async function canSetup(){if(window.FB_CFG)return true;try{const us=await claude.use('user');return !!us&&await us.canEdit()}catch(e){return false}}
 
 /* ---------- UI blocks ---------- */
 const hint=(i,t,p)=>`<div class="hint"><div class="hi">${i}</div><div><b>${t}</b><p>${p}</p></div></div>`;
@@ -196,14 +173,14 @@ const heroL=()=>`<div><div class="logo-big">🎓</div><h1>${esc(site().school||'
 const splash=()=>`<div class="splash"><div class="spin"></div><h2>Загружаем школу…</h2><p class="mut">Подключаемся к базе данных</p><div class="prog"><i style="width:${Math.round(Object.keys(loaded).length/KEYS.length*100)}%"></i></div></div>`;
 function loginCard(){
  if(!S.users.length)return`<div class="card"><h2>👑 Первый запуск</h2><p class="mut">Создайте аккаунт создателя. Дальше вы сами заводите всех остальных.</p><form data-f="setup"><label>Ваше имя<input name="name" required></label><br><label>Логин (латиница, цифры)<input name="nick" required pattern="[A-Za-z0-9_.\\-]{3,}"></label><br>${pwBox('pw','Пароль',false,true)}<p class="mut">${PWHINT}</p><button class="b">Создать и войти</button></form><div class="err" id="fe"></div></div>`;
- return`<div class="card"><h2>🔑 Вход</h2><form data-f="login"><label>Логин<input name="nick" autocomplete="username" required></label><br>${pwBox('pw','Пароль',false,false)}<br><button class="b" style="width:100%">Войти →</button></form><div class="err" id="fe"></div><p class="mut">Логин и пароль выдаёт администрация школы.</p>${LOCAL?'<p class="mut">⚠️ Локальный режим: данные хранятся только в этом браузере. Подключите Firebase, чтобы сайт работал для всех.</p>':''}</div>`}
+ return`<div class="card"><h2>🔑 Вход</h2><form data-f="login"><label>Логин<input name="nick" autocomplete="username" required></label><br>${pwBox('pw','Пароль',false,false)}<br><button class="b" style="width:100%">Войти →</button></form><div class="err" id="fe"></div><p class="mut">Логин и пароль выдаёт администрация школы.</p></div>`}
 const loginView=()=>`<div class="hero">${heroL()}${loginCard()}</div>`;
 function closedView(u){const s=site();return`<div class="closed"><div class="gear">⚙️</div><h1>Технические работы</h1><p class="lead">${esc(s.msg||'Ведутся технические работы. Загляните позже.')}</p><div class="cdbig" data-cd>${esc(cdText())}</div>${u?`<button class="b" data-act="out">Выйти</button>`:`<div class="card" style="text-align:left"><h3>🛡️ Вход для администрации</h3><form data-f="login"><label>Логин<input name="nick" required></label><br>${pwBox('pw','Пароль',false,false)}<br><button class="b">Войти</button></form><div class="err" id="fe"></div></div>`}</div>`}
 function shell(u,body,anim){
  const tabs=TABS[u.role];
- return`<header><div class="lg">🎓</div><div class="logo">${esc(site().school||'Школьный портал')}<small><span class="live"></span>онлайн · обновлено <span data-sync>${new Date(sync).toLocaleTimeString('ru-RU',{timeZone:TZ})}</span></small></div><div class="who">${ICON[u.role]} ${esc(u.name)} · ${ROLE[u.role]}${u.cls?' · '+esc(u.cls):''}</div><button class="out" data-act="out">Выйти</button></header>
+ return`<header><div class="lg">🎓</div><div class="logo">${esc(site().school||'Школьный портал')}<small><span class="live"></span>онлайн · обновлено <span data-sync>${new Date(sync).toLocaleTimeString('ru-RU')}</span></small></div><div class="who">${ICON[u.role]} ${esc(u.name)} · ${ROLE[u.role]}${u.cls?' · '+esc(u.cls):''}</div><button class="out" data-act="out">Выйти</button></header>
  ${closedNow()?`<div class="hint" style="margin:12px 14px 0;border-color:#dc2626"><div class="hi">🔧</div><div><b>Идут технические работы — сайт закрыт для всех, кроме администрации</b><p data-cd>${esc(cdText())}</p></div></div>`:''}
- <nav>${tabs.map(t=>`<button data-tab="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}</button>`).join('')}</nav><main class="${anim?'in':''}">${body}</main>`}
+ <nav>${tabs.map(t=>`<button data-tab="${t[0]}" class="${t[0]===tab?'on':''}">${t[1]}${t[0]==='chat'&&t[0]!==tab&&unread(u)?`<span class="nb">${unread(u)}</span>`:''}</button>`).join('')}</nav><main class="${anim?'in':''}">${body}</main>`}
 
 /* ---------- views ---------- */
 function overView(u){
@@ -222,7 +199,7 @@ function usersView(u){
   const ex=t.role==='student'?esc(t.cls||''):t.role==='teacher'?esc(t.subject||''):t.role==='parent'?(t.kids||[]).map(name).join(', '):'';
   const sec=SM[t.nick],m=canMan(u,t),key='users:'+t.nick;
   return`<tr><td><b>${esc(t.name)}</b><div class="mut">${ICON[t.role]} ${ROLE[t.role]} ${ex?'· '+ex:''}</div></td><td><code>${esc(t.nick)}</code></td>${cre?`<td>${sec?`<code class="pwv">${esc(sec.pw)}</code> <button class="s ok" data-copy="${esc(t.nick)} / ${esc(sec.pw)}" title="Копировать логин и пароль">📋</button>`:'<span class="mut">неизвестен — задайте новый</span>'}</td>`:''}
-  <td>${m?`${editF(t)}<form data-f="pw" data-nick="${esc(t.nick)}" class="row2"><input data-fix name="pw" placeholder="новый пароль" required pattern="[A-Za-z0-9_.!@#]{4,32}" title="${PWHINT}"><button class="s ok">Сменить</button>${t.nick!==sess?`<button type="button" class="s" data-del="${key}">${st.sure===key?'Точно удалить?':'Удалить'}</button>`:''}</form>`:'<span class="mut">—</span>'}</td></tr>`}).join('');
+  <td>${m?`${editF(t)}${verF(t)}<form data-f="pw" data-nick="${esc(t.nick)}" class="row2"><input data-fix name="pw" placeholder="новый пароль" required pattern="[A-Za-z0-9_.!@#]{4,32}" title="${PWHINT}"><button class="s ok">Сменить</button>${t.nick!==sess?`<button type="button" class="s" data-del="${key}">${st.sure===key?'Точно удалить?':'Удалить'}</button>`:''}</form>`:'<span class="mut">—</span>'}</td></tr>`}).join('');
  const roles=['all',...(cre?['admin','staff']:[]),'teacher','parent','student'];
  return hint('👥','Люди и пароли',cre?'Вы создаёте аккаунты и видите все пароли. Логин и пароль передайте человеку.':'Создавайте учеников, учителей и родителей. Пароли видит только создатель.')+
  `<div class="card"><h2>➕ Новый аккаунт</h2><form data-f="adduser" class="row rf r-student"><label>Роль<select name="role"><option value="student">🎒 Ученик</option><option value="teacher">👩‍🏫 Учитель</option><option value="parent">👨‍👩‍👧 Родитель</option>${cre?'<option value="staff">🛡️ Администратор</option>':''}</select></label>
@@ -251,7 +228,7 @@ function diaryBody(nick,canSign,u){
  const weeks=[0,1,2,3].map(i=>{const ts=Date.now()-i*6048e5,w=wk(ts),gs=g.filter(x=>wk(x.ts)===w),sg=signed(nick,w);
   return`<div class="wk"><div class="sub" style="border:0;padding:0 0 8px"><b>Неделя ${wr(ts)}${i===0?' (текущая)':''}</b>${sg?`<span class="badge y">✅ Подписано</span>`:'<span class="badge n">⏳ Не подписано</span>'}</div>${gs.map(chip).join('')||'<span class="mut">Оценок на этой неделе нет</span>'}
   <div style="margin-top:8px">${sg?`<span class="mut">Подписал(а): ${name(sg.parent)} · ${fmt(sg.ts)}</span>`:canSign?`<button class="b grn" data-sign="${esc(nick)}|${w}">✍️ Подписать дневник</button>`:'<span class="mut">Ждём подпись родителя</span>'}</div></div>`}).join('');
- return`<div class="card"><h2>${esc(byNick(nick)?byNick(nick).name:nick)}</h2><div class="stats"><div class="stat"><b>${avg(g)}</b>средний балл</div><div class="stat"><b>${g.length}</b>оценок</div><div class="stat"><b>${g.filter(x=>x.value>=8).length}</b>оценок 8–10</div><div class="stat"><b>${g.filter(x=>x.value<=3).length}</b>оценок 1–3</div></div></div>
+ return (canSign||u.role==='student'?impCard(nick,u):'')+`<div class="card"><h2>${esc(byNick(nick)?byNick(nick).name:nick)}</h2><div class="stats"><div class="stat"><b>${avg(g)}</b>средний балл</div><div class="stat"><b>${g.length}</b>оценок</div><div class="stat"><b>${g.filter(x=>x.value>=8).length}</b>оценок 8–10</div><div class="stat"><b>${g.filter(x=>x.value<=3).length}</b>оценок 1–3</div></div></div>
  <div class="card"><h2>✍️ Подпись родителя по неделям</h2>${weeks}</div>
  <div class="card"><h2>📚 По предметам</h2>${rows||'<p class="mut">Оценок пока нет</p>'}<p class="mut">Цвета: 1–3 красный · 4–5 оранжевый · 6–7 жёлтый · 8–9 светло-зелёный · 10 зелёный</p></div>${last?`<div class="card"><h2>💬 Комментарии учителей</h2>${last}</div>`:''}`}
 const diaryView=u=>hint('📒','Мой дневник','Тут все твои оценки по предметам. Раз в неделю родитель подписывает дневник.')+diaryBody(u.nick,false,u);
@@ -272,8 +249,8 @@ function schedView(u){
  const cl=classes();let c;
  if(u.role==='student')c=u.cls;else if(u.role==='parent'){const k=byNick(st.kid||(u.kids||[])[0]);c=k?k.cls:''}else{c=st.cls&&cl.includes(st.cls)?st.cls:cl[0]||'';st.cls=c}
  const it=S.sched.filter(s=>s.cls===c);let tr='';
- for(let l=1;l<=8;l++)tr+=`<tr><td class="mut"><b>${l}</b></td>${DAYS.map((_,d)=>`<td>${it.filter(s=>+s.day===d&&+s.lesson===l).map(s=>{const k='sched:'+s.id;return`${esc(s.subject)}${s.room?' <span class="mut">к.'+esc(s.room)+'</span>':''}${isAdm(u)?` <button class="s" data-del="${k}">${st.sure===k?'?':'✕'}</button>`:''}`}).join('<br>')}</td>`).join('')}</tr>`;
- const form=isAdm(u)?`<div class="card"><h2>➕ Добавить урок</h2><form data-f="addsched" class="row"><label>Класс<input name="cls" value="${esc(c)}" required></label><label>День<select name="day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></label><label>Урок №<select name="lesson">${[1,2,3,4,5,6,7,8].map(i=>`<option>${i}</option>`).join('')}</select></label><label>Предмет<input name="subject" required></label><label>Кабинет<input name="room"></label><button class="b">Добавить</button></form></div>`:'';
+ for(let l=1;l<=8;l++)tr+=`<tr><td class="mut"><b>${l}</b></td>${DAYS.map((_,d)=>`<td>${it.filter(s=>+s.day===d&&+s.lesson===l).map(s=>{const k='sched:'+s.id;return`${esc(s.subject)}${s.room?' <span class="mut">к.'+esc(s.room)+'</span>':''}${isAdm(u)||u.role==='student'?` <button class="s" data-del="${k}">${st.sure===k?'?':'✕'}</button>`:''}`}).join('<br>')}</td>`).join('')}</tr>`;
+ const form=(isAdm(u)||u.role==='student')?`<div class="card"><h2>➕ Добавить урок</h2><form data-f="addsched" class="row"><label>Класс<input name="cls" value="${esc(c)}" ${u.role==='student'?'readonly':''} required></label><label>День<select name="day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></label><label>Урок №<select name="lesson">${[1,2,3,4,5,6,7,8].map(i=>`<option>${i}</option>`).join('')}</select></label><label>Предмет<input name="subject" required></label><label>Кабинет<input name="room"></label><button class="b">Добавить</button></form></div>`:'';
  return hint('🗓️','Расписание уроков','Уроки по дням недели и номерам.')+form+`<div class="card"><h2>${c?'Класс '+esc(c):'Расписание'}</h2>${canTeach(u)&&cl.length?`<label style="max-width:220px">Класс<select data-cls>${cl.map(x=>`<option ${x===c?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:''}<div class="wrap"><table><tr><th>№</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>${tr}</table></div></div>`}
 
 function newsList(small){
@@ -294,7 +271,74 @@ function setView(u){
 function meView(u){
  return hint('👤','Мой профиль','Здесь можно поменять свой пароль на любой другой (латиница, без пробелов).')+`<div class="card"><h2>${ICON[u.role]} ${esc(u.name)}</h2><p class="mut">Логин: <code>${esc(u.nick)}</code> · Роль: ${ROLE[u.role]}${u.cls?' · Класс: '+esc(u.cls):''}${u.subject?' · Предмет: '+esc(u.subject):''}</p></div>
  <div class="card"><h3>📍 Наша школа</h3><p><a class="maplink" href="${mapUrl()}" target="_blank" rel="noopener noreferrer"><span class="mp">📍</span><span><b>${esc(placeOf())}</b><br><span class="mut">Нажмите — откроется Google Карты с меткой школы</span></span></a></p></div>
+ ${lkCard(u)}
  <div class="card"><h3>🔑 Сменить пароль</h3><form data-f="mypw" class="row">${pwBox('old','Старый пароль',false,false)}${pwBox('pw','Новый пароль',false,true)}<button class="b">Сменить</button></form><p class="mut">${PWHINT}</p><div class="err" id="fe"></div></div>`}
+
+
+/* ---------- homework & absences ---------- */
+const dkey=ts=>new Date(ts-new Date(ts).getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const dayStart=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
+function classOf(u){if(u.role==='student')return u.cls;if(u.role==='parent'){const k=byNick(st.kid||(u.kids||[])[0]);return k?k.cls:''}const cl=classes();st.cls=st.cls&&cl.includes(st.cls)?st.cls:cl[0]||'';return st.cls}
+function hwView(u){
+ const c=classOf(u),cl=classes(),T=dayStart(),DAY=864e5;
+ const lab=d=>{const k=Math.round((d-T)/DAY);return k===0?'сегодня':k===1?'завтра':k===-1?'вчера':new Date(d).toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'})};
+ const items=S.hw.filter(h=>h.cls===c&&h.due>=T-3*DAY).sort((a,b)=>a.due-b.due||a.ts-b.ts);
+ const form=(canTeach(u)||u.role==='student')?`<div class="card"><h2>➕ Добавить домашнее задание</h2><form data-f="addhw"><div class="row"><label>Класс<input name="cls" value="${esc(c)}" ${u.role==='student'?'readonly':''} required></label><label>Предмет<input name="subject" value="${esc(u.subject||'')}" required></label><label>На когда<input type="date" name="due" value="${dkey(T+DAY)}" required></label></div><br><label>Задание<textarea name="text" rows="2" required></textarea></label><br><button class="b">Добавить</button></form></div>`:'';
+ const list=items.map(h=>{const k='hw:'+h.id,soon=h.due-T<=DAY&&h.due>=T;return`<div class="n ${soon?'hwi':'neu'} ${h.due<T?'old':''}"><div><b>${esc(h.subject)}</b> · на ${lab(h.due)}<br>${esc(h.text).replace(/\n/g,'<br>')}<br><span class="mut">${name(h.by)}</span></div>${(isAdm(u)||h.by===u.nick)?`<button class="s" data-del="${k}">${st.sure===k?'Точно?':'✕'}</button>`:''}</div>`}).join('');
+ return hint('📚','Домашние задания','Что задали и на когда. Любой ученик класса может добавить задание для всех. Оранжевым подсвечено то, что нужно на сегодня и завтра.')+form+`<div class="card"><h2>${c?'Класс '+esc(c):'Домашка'}</h2>${canTeach(u)&&cl.length?`<label style="max-width:220px">Класс<select data-cls>${cl.map(x=>`<option ${x===c?'selected':''}>${esc(x)}</option>`).join('')}</select></label><br>`:''}${list||'<p class="mut">Заданий пока нет 🎉</p>'}</div>`}
+const RS={sick:['🤒','Болезнь','neu'],exc:['📄','Уважительная причина','neu'],none:['❌','Без уважительной причины','bad']};
+function absView(u){
+ const can=canTeach(u),kids=u.kids||[],mine=can?S.abs:S.abs.filter(a=>u.role==='student'?a.stu===u.nick:kids.includes(a.stu));
+ const form=can?`<div class="card"><h2>➕ Отметить пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name)} (${esc(s.cls||'')})</option>`).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">🤒 Болезнь</option><option value="exc">📄 Уважительная</option><option value="none">❌ Без уважительной причины</option></select></label></div><br><label>Заметка (необязательно)<input name="note"></label><br><button class="b">Отметить</button></form></div>`:'';
+ const sum=!can?`<div class="stats" style="margin-bottom:14px"><div class="stat"><b>${mine.length}</b>пропусков</div><div class="stat"><b style="color:#dc2626">${mine.filter(a=>a.reason==='none').length}</b>без причины</div></div>`:'';
+ const list=[...mine].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return`<div class="n ${r[2]}"><div><b>${r[0]} ${r[1]}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}${a.note?': '+esc(a.note):''}<br><span class="mut">${name(a.by)}</span></div>${(isAdm(u)||a.by===u.nick)?`<button class="s" data-del="${k}">${st.sure===k?'Точно?':'✕'}</button>`:''}</div>`}).join('');
+ return hint('🚫','Пропуски уроков','🔴 красным отмечены пропуски без уважительной причины.')+form+`<div class="card"><h2>${can?'Журнал пропусков':'Пропуски'}</h2>${sum}${list||'<p class="mut">Пропусков нет 👍</p>'}</div>`}
+
+
+/* ---------- screenshot import (Claude reads grades) ---------- */
+let imp=null;
+const IMPPROMPT='На изображении скриншот электронного дневника (Беларусь, оценки по шкале от 1 до 10). Найди все выставленные оценки. Верни ТОЛЬКО JSON-массив объектов вида {"subject":"Математика","value":8,"date":"2026-11-20"}. value — целое число от 1 до 10. date — в формате YYYY-MM-DD, если дата видна, иначе null. Не включай пропуски, средние баллы, домашние задания, ничего не выдумывай. Если оценок нет — верни [].';
+async function shrink(file){try{const bm=await createImageBitmap(file),k=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(bm.width*k));c.height=Math.max(1,Math.round(bm.height*k));c.getContext('2d').drawImage(bm,0,0,c.width,c.height);return (await new Promise(r=>c.toBlob(r,'image/jpeg',.85)))||file}catch(e){return file}}
+async function shotImport(file,nick){
+ imp={busy:true,rows:[],err:'',nick};render();
+ try{
+  const sm=await claude.use('sample');
+  if(!sm){imp={rows:[],err:'Загрузка скриншота работает только при входе через claude.ai',nick};render();return}
+  const lim=await sm.limits();if(!lim||!lim.images){imp={rows:[],err:'Чтение изображений сейчас недоступно',nick};render();return}
+  const blob=await shrink(file);
+  const r=await sm.json(IMPPROMPT,{images:[blob],cache:false});
+  const rows=(Array.isArray(r)?r:[]).map(x=>({subject:String((x&&x.subject)||'').trim().slice(0,60),value:Math.round(+(x&&x.value)),date:/^\d{4}-\d{2}-\d{2}$/.test((x&&x.date)||'')?x.date:'',ok:true})).filter(x=>x.subject&&x.value>=1&&x.value<=10).slice(0,80);
+  imp={rows,err:rows.length?'':'Оценки на скриншоте не найдены. Попробуйте скриншот страницы с оценками покрупнее.',nick};
+ }catch(e){imp={rows:[],err:e&&e.code==='not_granted'?'Вы не разрешили распознавание.':'Не удалось распознать скриншот. Попробуйте ещё раз.',nick}}
+ render()}
+function impCard(nick,u){
+ if(window.FB_CFG)return'';
+ const m=imp&&imp.nick===nick?imp:null;
+ let body=`<label class="up">📸 Выбрать скриншот<input type="file" accept="image/*" data-shot="${esc(nick)}" hidden></label>`;
+ if(m&&m.busy)body=`<div class="spin" style="width:38px;height:38px;border-width:4px;margin:8px 0"></div><p class="mut">Читаю скриншот…</p>`;
+ else if(m&&m.rows.length)body=`<p class="mut">Нашёл ${m.rows.length} оценок. Уберите галочки с лишних и подтвердите.</p>${m.rows.map((r,i)=>`<label class="ck"><input type="checkbox" data-imp="${i}" ${r.ok?'checked':''}><span class="gr ${gc(r.value)}">${r.value}</span> ${esc(r.subject)} <span class="mut">${r.date?new Date(r.date+'T12:00:00').toLocaleDateString('ru-RU'):'сегодня'}</span></label>`).join('')}<div class="row" style="margin-top:10px"><button class="b" data-impgo="${esc(nick)}">✅ Добавить в дневник</button><button class="s" data-impno>Отмена</button></div>`;
+ return`<div class="card"><h2>📸 Загрузить оценки скриншотом</h2><p class="mut">Откройте свои оценки на e-schools.by, сделайте скриншот и загрузите сюда — оценки внесутся сами. Скриншот читает Claude (ИИ), поэтому проверьте результат перед добавлением.</p>${m&&m.err?`<div class="err">${esc(m.err)}</div>`:''}${body}</div>`}
+async function impGo(nick,u){
+ const rows=(imp&&imp.rows||[]).filter(r=>r.ok);if(!rows.length){imp=null;render();return}
+ const have=GB.get(nick)||[];let n=0;
+ await Promise.all(rows.map(r=>{const ts=r.date?new Date(r.date+'T12:00:00').getTime():Date.now();
+  if(r.date&&have.some(g=>g.subject===r.subject&&g.value===r.value&&dkey(g.ts)===r.date))return;n++;
+  return put('grades',uid(),{stu:nick,subject:r.subject,value:r.value,comment:'импорт со скриншота',by:u.nick,ts,src:'import'})}));
+ imp=null;toast('✅ Добавлено оценок: '+n);if(n)confetti();render()}
+
+
+/* ---------- class chat ---------- */
+const unread=u=>{if(u.role==='parent')return 0;const c=u.role==='student'?u.cls:st.cls||'';if(!c)return 0;const seen=+LS.get('sch_seen_'+u.nick+'_'+c)||0;return S.chat.filter(m=>m.cls===c&&m.ts>seen&&m.by!==u.nick).length};
+function chatView(u){
+ const c=classOf(u),cl=classes();
+ const head=hint('💬','Чат класса '+(c?esc(c):''),'Общий чат одноклассников. Пишите по делу и уважайте друг друга — администрация видит сообщения и может их удалять.');
+ if(!c)return head+'<div class="card">Класс не указан. Попросите администратора указать ваш класс.</div>';
+ LS.set('sch_seen_'+u.nick+'_'+c,String(Date.now()));
+ const msgs=S.chat.filter(m=>m.cls===c).sort((a,b)=>a.ts-b.ts).slice(-100);let last='';
+ const list=msgs.map(m=>{const d=new Date(m.ts).toLocaleDateString('ru-RU',{day:'numeric',month:'long'}),sep=d!==last?`<div class="dsep">${d}</div>`:'';last=d;const mine=m.by===u.nick,k='chat:'+m.id;
+  return sep+`<div class="msg ${mine?'me':''}"><div class="bub"><div class="mn">${mine?'Вы':name(m.by)}</div>${esc(m.text).replace(/\n/g,'<br>')}<div class="mt">${new Date(m.ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}${(mine||isAdm(u))?` <button class="mx" data-del="${k}">${st.sure===k?'Точно?':'✕'}</button>`:''}</div></div></div>`}).join('');
+ return head+(canTeach(u)&&cl.length?`<div class="card"><label style="max-width:220px">Класс<select data-cls>${cl.map(x=>`<option ${x===c?'selected':''}>${esc(x)}</option>`).join('')}</select></label></div>`:'')+
+ `<div class="card chat"><div id="chatbox">${list||'<p class="mut" style="text-align:center">Сообщений пока нет. Напишите первым! 👋</p>'}</div><form data-f="chat" class="cform"><textarea name="text" data-chat rows="1" maxlength="500" placeholder="Сообщение классу…" required></textarea><button class="b">➤</button></form></div>`}
 
 /* ---------- render with state keeping ---------- */
 function snap(){const els=[...document.querySelectorAll('#app input,#app select,#app textarea')],a=document.activeElement;
@@ -314,30 +358,41 @@ function render(){
  wasClosed=closedNow();
  if(closedNow()&&!isAdm(u)){a.innerHTML=closedView(u);return}
  if(!u){a.innerHTML=loginView();lastTab=null;return}
- const s=snap(),V={over:overView,users:usersView,grades:gradesView,diary:diaryView,kid:kidView,beh:behView,sched:schedView,news:newsView,set:setView,me:meView};
+ const s=snap(),V={over:overView,users:usersView,grades:gradesView,diary:diaryView,kid:kidView,hw:hwView,abs:absView,chat:chatView,beh:behView,sched:schedView,news:newsView,set:setView,me:meView};
  if(!tab)tab=LS.get('sch_tab_'+u.nick);const t=TABS[u.role];if(!t.find(x=>x[0]===tab))tab=t[0][0];
  s.tab=tab===lastTab?tab:null;const anim=tab!==lastTab;
- a.innerHTML=shell(u,V[tab](u),anim);lastTab=tab;applyRF();restore(s.tab?s:null);if(anim)countUp()}
+ const cb0=document.getElementById('chatbox'),nb=!cb0||cb0.scrollHeight-cb0.scrollTop-cb0.clientHeight<90;
+ a.innerHTML=shell(u,V[tab](u),anim);lastTab=tab;applyRF();restore(s.tab?s:null);if(anim||nb){const cb=document.getElementById('chatbox');if(cb)cb.scrollTop=cb.scrollHeight}if(anim)countUp()}
 
 /* ---------- helpers: secrets, maintenance, effects ---------- */
 const sk=n=>'k'+[...n].map(c=>c.charCodeAt(0).toString(36)).join('');
 const secMap=()=>{const m={};S.secrets.forEach(d=>Object.values(d).forEach(v=>{if(v&&typeof v==='object'&&v.nick&&(!m[v.nick]||v.ts>m[v.nick].ts))m[v.nick]=v}));return m};
+const normA=x=>String(x).trim().toLowerCase().replace(/\s+/g,'');
+const verF=t=>(t.role==='student'||t.role==='parent')?`<form data-f="setver" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="a1" placeholder="год рожд." style="width:90px" required><input name="a2" placeholder="фам. кл. рук." style="width:120px" required><button class="s ok">${t.v1?'✓ ':''}Вопросы</button></form>`:'';
+function lkCard(u){
+ const link=`<a class="maplink es" href="https://e-schools.by/" target="_blank" rel="noopener noreferrer"><span class="mp">🔗</span><span><b>Открыть e-schools.by</b><br><span class="mut">Откроется в новой вкладке — войдите там в свой аккаунт</span></span></a>`;
+ const head='<h3>🔗 Связка с e-schools.by</h3>';
+ if(u.role!=='student'&&u.role!=='parent')return`<div class="card">${head}<p>${link}</p></div>`;
+ if(u.esOk)return`<div class="card">${head}<p><span class="badge y">✅ Подтверждено</span> логин на e-schools.by: <code>${esc(u.esl||'')}</code></p><p>${link}</p></div>`;
+ const lk=+LS.get('sch_lk_'+u.nick)||0;
+ if(!u.v1||!u.v2)return`<div class="card">${head}<p class="mut">Чтобы включить связку, администратор должен задать для вашего аккаунта вопросы для проверки. Обратитесь к нему.</p></div>`;
+ return`<div class="card">${head}<p class="mut">Подтвердите, что это вы: введите логин на e-schools.by и ответьте на вопросы.</p>${lk>Date.now()?`<div class="err">Слишком много ошибок. Попробуйте через ${Math.ceil((lk-Date.now())/60000)} мин.</div>`:`<form data-f="link"><div class="row"><label>Логин на e-schools.by<input name="esl" required autocomplete="off"></label><label>Год рождения ученика<input name="a1" inputmode="numeric" required autocomplete="off"></label><label>Фамилия классного руководителя<input name="a2" required autocomplete="off"></label></div><br><button class="b">Проверить и подтвердить</button></form><div class="err" id="fe"></div>`}<p class="mut">🔒 Пароль от e-schools.by мы не запрашиваем и не храним — он нужен только на сайте e-schools.by.</p></div>`}
 const strip=o=>{const c={...o};delete c.id;return c};
 const PLACE='Мотыкальская школа имени Александра Богова';
 const placeOf=()=>site().place||PLACE;
 const mapUrl=()=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(placeOf());
 const closedNow=()=>{const s=site();return !!s.closed&&(!s.until||Date.now()<s.until)};
-function cdText(){const s=site();if(!s.until)return'Сайт откроется, когда администрация завершит работы.';const ms=s.until-Date.now();if(ms<=0)return'Скоро откроемся…';const t=Math.ceil(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),c=t%60;return'Откроется через '+(h?h+' ч ':'')+String(m).padStart(2,'0')+' мин '+String(c).padStart(2,'0')+' с (в '+new Date(s.until).toLocaleTimeString('ru-RU',{timeZone:TZ,hour:'2-digit',minute:'2-digit'})+')'}
+function cdText(){const s=site();if(!s.until)return'Сайт откроется, когда администрация завершит работы.';const ms=s.until-Date.now();if(ms<=0)return'Скоро откроемся…';const t=Math.ceil(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),c=t%60;return'Откроется через '+(h?h+' ч ':'')+String(m).padStart(2,'0')+' мин '+String(c).padStart(2,'0')+' с (в '+new Date(s.until).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+')'}
 const editF=t=>t.role==='student'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="cls" value="${esc(t.cls||'')}" placeholder="класс" style="width:80px"><button class="s ok">Класс</button></form>`:t.role==='teacher'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="subject" value="${esc(t.subject||'')}" placeholder="предмет" style="width:130px"><button class="s ok">Предмет</button></form>`:'';
 const schedule=()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;render()})};
 function countUp(){if(reduced)return;document.querySelectorAll('.stat b').forEach(b=>{const t=b.textContent.trim();if(!/^\d+(\.\d+)?$/.test(t))return;const v=parseFloat(t),d=t.includes('.')?1:0,t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/700);b.textContent=p<1?(v*(1-Math.pow(1-p,3))).toFixed(d):t;if(p<1)requestAnimationFrame(f)})(t0)})}
 function confetti(){if(reduced)return;let c=document.getElementById('cf');if(c)c.remove();c=document.createElement('canvas');c.id='cf';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);const x=c.getContext('2d'),P=Array.from({length:110},()=>({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*16,vy:Math.random()*-13-3,r:Math.random()*7+4,c:'hsl('+Math.random()*360+',85%,60%)',a:Math.random()*6}));let n=0;(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.vy+=.36;p.x+=p.vx;p.y+=p.vy;p.a+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore()});if(++n<120)requestAnimationFrame(f);else c.remove()})()}
 function ripple(b,e){const r=b.getBoundingClientRect(),s=document.createElement('span'),d=Math.max(r.width,r.height)*2;s.className='rip';s.style.cssText='width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left-d/2)+'px;top:'+(e.clientY-r.top-d/2)+'px';b.appendChild(s);setTimeout(()=>s.remove(),600)}
-setInterval(()=>{const t=cdText();document.querySelectorAll('[data-cd]').forEach(e=>e.textContent=t);document.querySelectorAll('[data-sync]').forEach(e=>e.textContent=new Date(sync).toLocaleTimeString('ru-RU',{timeZone:TZ}));if(Object.keys(loaded).length===KEYS.length&&closedNow()!==wasClosed)render()},1000);
+setInterval(()=>{const t=cdText();document.querySelectorAll('[data-cd]').forEach(e=>e.textContent=t);document.querySelectorAll('[data-sync]').forEach(e=>e.textContent=new Date(sync).toLocaleTimeString('ru-RU'));if(Object.keys(loaded).length===KEYS.length&&closedNow()!==wasClosed)render()},1000);
 
 /* ---------- events ---------- */
 document.addEventListener('click',async e=>{
- const rb=e.target.closest('button.b');if(rb)ripple(rb,e);const t=e.target.closest('[data-tab],[data-del],[data-act],[data-eye],[data-gen],[data-rf],[data-sign],[data-theme-toggle],[data-copy],[data-preset]');if(!t)return;
+ const rb=e.target.closest('button.b');if(rb)ripple(rb,e);const t=e.target.closest('[data-tab],[data-del],[data-act],[data-eye],[data-gen],[data-rf],[data-sign],[data-theme-toggle],[data-copy],[data-preset],[data-impgo],[data-impno]');if(!t)return;
  if(t.dataset.tab){tab=t.dataset.tab;LS.set('sch_tab_'+sess,tab);render()}
  else if(t.dataset.act==='out'){logout();render()}
  else if(t.hasAttribute('data-eye')){const i=t.previousElementSibling;i.type=i.type==='password'?'text':'password'}
@@ -345,16 +400,20 @@ document.addEventListener('click',async e=>{
  else if(t.dataset.rf){st.rf=t.dataset.rf;render()}
  else if(t.hasAttribute('data-theme-toggle')){const r=document.documentElement,cur=r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;LS.set('sch_theme',nx)}
  else if(t.hasAttribute('data-copy')){try{await navigator.clipboard.writeText(t.dataset.copy);toast('📋 Скопировано')}catch(x){toast(t.dataset.copy)}}
+ else if(t.hasAttribute('data-impno')){imp=null;render()}
+ else if(t.dataset.impgo){await impGo(t.dataset.impgo,me())}
  else if(t.hasAttribute('data-preset')){const m=t.closest('form').elements.msg;m.value=t.dataset.preset}
  else if(t.dataset.sign){const[n,w]=t.dataset.sign.split('|');if(await put('signs',n+'_'+w,{stu:n,wk:w,parent:sess,ts:Date.now()})){toast('✅ Дневник подписан');confetti()}}
  else if(t.dataset.del){const k=t.dataset.del;if(st.sure!==k){st.sure=k;render();setTimeout(()=>{if(st.sure===k){st.sure='';render()}},4000);return}
   st.sure='';const[c,id]=k.split(':');if(c==='users'){await del('auth',id);await del('secrets',id)}await del(c,id);render()}});
 document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-cls]')){st.cls=t.value;render()}else if(t.matches('[data-kid]')){st.kid=t.value;render()}else if(t.name==='role'&&t.form)applyRF()});
+document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-shot]')&&t.files&&t.files[0]){shotImport(t.files[0],t.dataset.shot)}else if(t.matches('[data-imp]')&&imp)imp.rows[+t.dataset.imp].ok=t.checked});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&e.target.matches&&e.target.matches('[data-chat]')){e.preventDefault();if(e.target.form.reportValidity())e.target.form.requestSubmit()}});
 document.addEventListener('input',e=>{const t=e.target;if(t.matches('[data-fix]')){const v=t.value.replace(/[^A-Za-z0-9_.!@#]/g,'');if(v!==t.value)t.value=v}else if(t.matches('[data-q]')){st.q=t.value;render()}});
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,k=f.dataset.f;if(!k)return;const fd=new FormData(f),d=Object.fromEntries(fd),u=me(),say=m=>{const x=document.getElementById('fe');if(x)x.textContent=m};
  if(k==='setup'){
-  if(!(await canSetup())){say('Не удалось создать аккаунт.');return}
+  if(!(await canSetup())){say('Создать создателя может только владелец страницы в claude.ai.');return}
   const nick=d.nick.toLowerCase();if(!PWRE.test(d.pw)){say(PWHINT);return}
   if(await put('users',nick,{nick,name:d.name.trim(),role:'admin',cls:'',subject:'',kids:[]})){const h=await setPw(nick,d.pw);if(h){sess=nick;sessH=h;LS.set('sch_u',nick);LS.set('sch_h',h);confetti()}}
  }else if(k==='login'){
@@ -379,7 +438,21 @@ document.addEventListener('submit',async e=>{
  }else if(k==='addnews'){
   if(await put('news',uid(),{title:d.title.trim(),text:d.text.trim(),by:u.nick,ts:Date.now()}))f.reset()
  }else if(k==='addsched'){
-  if(await put('sched',uid(),{cls:d.cls.trim(),day:+d.day,lesson:+d.lesson,subject:d.subject.trim(),room:(d.room||'').trim()})){st.cls=d.cls.trim();toast('✅ Урок добавлен')}
+  if(await put('sched',uid(),{cls:(u.role==='student'?u.cls:d.cls.trim()),day:+d.day,lesson:+d.lesson,subject:d.subject.trim(),room:(d.room||'').trim()})){st.cls=d.cls.trim();toast('✅ Урок добавлен')}
+ }else if(k==='addhw'){
+  if(await put('hw',uid(),{cls:(u.role==='student'?u.cls:d.cls.trim()),subject:d.subject.trim(),text:d.text.trim(),due:new Date(d.due+'T00:00:00').getTime(),by:u.nick,ts:Date.now()})){st.cls=d.cls.trim();toast('✅ Домашка добавлена');f.text.value=''}
+ }else if(k==='addabs'){
+  if(await put('abs',uid(),{stu:d.stu,date:new Date(d.date+'T00:00:00').getTime(),reason:d.reason,note:(d.note||'').trim(),by:u.nick,ts:Date.now()})){toast('✅ Пропуск отмечен');f.note.value=''}
+ }else if(k==='setver'){
+  const t=byNick(f.dataset.nick);if(t&&await put('users',t.nick,{...strip(t),v1:await sha(t.nick+':'+normA(d.a1)),v2:await sha(t.nick+':'+normA(d.a2)),esOk:0}))toast('✅ Вопросы для проверки сохранены')
+ }else if(k==='link'){
+  const lk=+LS.get('sch_lk_'+u.nick)||0;if(lk>Date.now()){say('Слишком много попыток. Подождите '+Math.ceil((lk-Date.now())/60000)+' мин.');return}
+  const h1=await sha(u.nick+':'+normA(d.a1)),h2=await sha(u.nick+':'+normA(d.a2));
+  if(h1!==u.v1||h2!==u.v2){const c=(+LS.get('sch_lkc_'+u.nick)||0)+1;LS.set('sch_lkc_'+u.nick,c);if(c>=3){LS.set('sch_lk_'+u.nick,Date.now()+6e5);LS.del('sch_lkc_'+u.nick);say('Три ошибки подряд. Связка заблокирована на 10 минут.');render()}else say('Ответы не совпали. Осталось попыток: '+(3-c));return}
+  LS.del('sch_lkc_'+u.nick);if(await put('users',u.nick,{...strip(u),esl:d.esl.trim(),esOk:Date.now()})){toast('✅ Связка подтверждена');confetti()}
+ }else if(k==='chat'){
+  const c=classOf(u),tx=(d.text||'').trim();if(!c||!tx)return;if(Date.now()-(window.__lastMsg||0)<800)return;window.__lastMsg=Date.now();
+  if(await put('chat',uid(),{cls:c,text:tx.slice(0,500),by:u.nick,ts:Date.now()}))f.text.value=''
  }else if(k==='setinfo'){
   const t=byNick(f.dataset.nick);if(t&&await put('users',t.nick,{...strip(t),...('cls' in d?{cls:d.cls.trim()}:{subject:d.subject.trim()})}))toast('✅ Сохранено')
  }else if(k==='maint'){
@@ -394,11 +467,10 @@ document.addEventListener('submit',async e=>{
 /* ---------- start ---------- */
 (async()=>{
  render();
- if(document.readyState==='loading')await new Promise(r=>addEventListener('DOMContentLoaded',r));
  const to=setTimeout(()=>{if(Object.keys(loaded).length<KEYS.length){err='Не удалось загрузить данные. Проверьте интернет и обновите страницу.';render()}},12000);
- try{if(window.FB_CFG){firebase.initializeApp(window.FB_CFG);db=firebase.firestore()}else{LOCAL=true;db=localDB()}}catch(e){db=null}
- if(!db){clearTimeout(to);err='База данных недоступна. Проверьте настройки Firebase и подключение к интернету.';render();return}
- myId=LOCAL?'local':'fb';
+ try{if(window.FB_CFG){firebase.initializeApp(window.FB_CFG);db=firebase.firestore()}else db=await claude.use('db')}catch(e){db=null}
+ if(!db){clearTimeout(to);err='База данных недоступна. Откройте сайт по ссылке из аккаунта claude.ai (или проверьте настройки Firebase).';render();return}
+ try{if(window.FB_CFG)myId='fb';else{const us=await claude.use('user');myId=us?await us.id():'x'}}catch(e){}
  KEYS.forEach(k=>db.collection(k).onSnapshot(s=>{
   const arr=s.docs.map(d=>({...d.data(),id:d.id})),sg=JSON.stringify(arr);sync=Date.now();
   if(loaded[k]&&sg===SIG[k])return;SIG[k]=sg;S[k]=arr;loaded[k]=1;
