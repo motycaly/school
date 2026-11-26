@@ -263,7 +263,9 @@ function usersView(u){
  <input data-q placeholder="🔍 Поиск" value="${esc(st.q)}" style="margin:6px 0 12px"><div class="wrap"><table><tr><th>Человек</th><th>Логин</th>${cre?'<th>Пароль</th>':''}<th>Действия</th></tr>${rows||'<tr><td colspan="4" class="mut">Пусто</td></tr>'}</table></div></div>`}
 const editF=t=>t.role==='student'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="cls" value="${esc(t.cls||'')}" placeholder="класс" style="width:80px"><button class="s ok">Класс</button></form>`:t.role==='teacher'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="subject" value="${esc(t.subject||'')}" placeholder="предмет" style="width:130px"><button class="s ok">Предмет</button></form>`:'';
 function gradesView(u){
- const cl=classes();if(!st.cls||!cl.includes(st.cls))st.cls=cl[0]||'';
+ const cl=classes();
+ if(!cl.length) return hint('📝','Журнал','')+'<div class="card"><p class="mut">В системе пока нет классов и учеников. Добавьте их во вкладке «Люди».</p></div>';
+ if(!st.cls||!cl.includes(st.cls))st.cls=cl[0];
  const today=new Date();today.setHours(0,0,0,0);
  if(!st.calDate)st.calDate=dkey(today);
  const day=+new Date(st.calDate+'T12:00:00').getDay(),di=(day+6)%7;
@@ -320,15 +322,15 @@ function hwModView(u){
 const RS={sick:['🤒','Болезнь','neu'],exc:['📄','Уважительная','neu'],none:['❌','Без уважительной','bad']};
 function absView(u){
  const can=canTeach(u),kids=u.kids||[],mine=can?S.abs:S.abs.filter(a=>u.role==='student'?a.stu===u.nick:kids.includes(a.stu));
- const form=can?`<div class="card"><h2>➕ Пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name)}</option>`).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">Болезнь</option><option value="exc">Уважительная</option><option value="none">Без уважительной</option></select></label></div><br><button class="b">Отметить</button></form></div>`:'';
+ const form=can?`<div class="card"><h2>➕ Отметить пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name)}</option>`).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">Болезнь</option><option value="exc">Уважительная</option><option value="none">Без уважительной</option></select></label></div><br><button class="b">Отметить</button></form></div>`:'';
  const list=[...mine].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return`<div class="n ${r[2]}"><div><b>${r[0]} ${r[1]}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}</div>${(isAdm(u)||a.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
- return hint('🚫','Пропуски','')+form+`<div class="card">${list||'<p class="mut">Нет 👍</p>'}</div>`}
+ return hint('🚫','Пропуски','Все отмеченные пропуски.')+form+`<div class="card"><h2>Журнал пропусков</h2>${list||'<p class="mut">Нет пропусков 👍</p>'}</div>`}
 function behView(u){
  const T={good:'🟢 Хорошо',bad:'🔴 Замечание',neu:'🔵 Заметка'},can=canTeach(u),kids=u.kids||[];
  const mine=can?S.notes:S.notes.filter(n=>u.role==='student'?n.stu===u.nick:kids.includes(n.stu));
- const form=can?`<div class="card"><h2>➕ Запись</h2><form data-f="addnote"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name)}</option>`).join('')}</select></label><label>Тип<select name="type"><option value="good">Хорошо</option><option value="bad">Замечание</option><option value="neu">Заметка</option></select></label></div><br><label>Текст<input name="text" required></label><br><button class="b">Добавить</button></form></div>`:'';
- const list=[...mine].sort((a,b)=>b.ts-a.ts).map(n=>{const k='notes:'+n.id;return`<div class="n ${esc(n.type)}"><div>${T[n.type]}: ${esc(n.text)}<br><span class="mut">${name(n.by)} · ${fmt(n.ts)}</span></div>${(isAdm(u)||n.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
- return hint('🎭','Поведение','')+form+`<div class="card">${list||'<p class="mut">Нет</p>'}</div>`}
+ const form=can?`<div class="card"><h2>➕ Запись о поведении</h2><form data-f="addnote"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name)}</option>`).join('')}</select></label><label>Тип<select name="type"><option value="good">Хорошо</option><option value="bad">Замечание</option><option value="neu">Заметка</option></select></label></div><br><label>Текст<input name="text" required></label><br><button class="b">Добавить</button></form></div>`:'';
+ const list=[...mine].sort((a,b)=>b.ts-a.ts).map(n=>{const k='notes:'+n.id;return`<div class="n ${n.type}"><div><b>${T[n.type]||''}</b>: ${esc(n.text)}<br><span class="mut">${name(n.by)} · ${fmt(n.ts)}</span></div>${(isAdm(u)||n.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
+ return hint('🎭','Поведение','Записи о поведении.')+form+`<div class="card">${list||'<p class="mut">Записей нет</p>'}</div>`}
 function schedView(u){
  const c=classOf(u),today=new Date();today.setHours(0,0,0,0);
  const di=(today.getDay()+6)%7;
@@ -337,8 +339,12 @@ function schedView(u){
   const items=S.sched.filter(s=>s.cls===c&&+s.day===d).sort((a,b)=>+a.lesson-+b.lesson);
   html+=`<div class="sched-day" ${d===di?'style="background:rgba(91,75,232,.06);border-radius:12px;padding:8px"':''}><h3>${dd}${d===di?' · сегодня':''}</h3>`;
   if(!items.length)html+='<span class="mut">Нет уроков</span>';
-  items.forEach(s=>{const gs=S.grades.filter(g=>g.subject===s.subject&&students().find(x=>x.nick===g.stu&&x.cls===c)).sort((a,b)=>b.ts-a.ts).slice(0,6);
-   html+=`<div class="sched-item"><span class="les">${s.lesson}.</span><b>${esc(s.subject)}</b>${s.room?'<span class="mut">к.'+esc(s.room)+'</span>':''}<span class="cell-grades" data-cell="${esc(s.subject)}|${esc(c)}">${gs.map(chip).join('')}</span></div>`});
+  items.forEach(s=>{
+    let targetNick = u.nick;
+    if(u.role==='parent') targetNick = (u.kids||[])[0];
+    const gs=S.grades.filter(g=>g.subject===s.subject && (u.role==='admin'||u.role==='staff' ? true : g.stu===targetNick)).sort((a,b)=>b.ts-a.ts).slice(0,6);
+    html+=`<div class="sched-item"><span class="les">${s.lesson}.</span><b>${esc(s.subject)}</b>${s.room?'<span class="mut">к.'+esc(s.room)+'</span>':''}<span class="cell-grades" data-cell="${esc(s.subject)}|${esc(c)}">${gs.map(chip).join('')}</span></div>`
+  });
   html+='</div>'}
  html+='</div>';
  if(isAdm(u))html+=`<div class="card"><h3>➕ Урок</h3><form data-f="addsched" class="row"><label>Класс<input name="cls" value="${esc(c)}" required></label><label>День<select name="day">${DAYS.map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></label><label>Урок<input type="number" name="lesson" min="1" max="8" value="1"></label><label>Предмет<select name="subject">${subjOf(c).map(s=>`<option>${esc(s)}</option>`).join('')}</select></label><button class="b">Добавить</button></form></div>`;
