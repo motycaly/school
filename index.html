@@ -324,7 +324,7 @@ const RS={sick:['🤒','Болезнь','neu'],exc:['📄','Уважительн
 function absView(u){
  const can=canTeach(u),kids=u.kids||[],mine=can?S.abs:S.abs.filter(a=>u.role==='student'?a.stu===u.nick:kids.includes(a.stu));
  const form=can?`<div class="card"><h2>➕ Отметить пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name||'')}</option>`).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">Болезнь</option><option value="exc">Уважительная</option><option value="none">Без уважительной</option></select></label></div><br><button class="b">Отметить</button></form></div>`:'';
- const list=[...mine].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return`<div class="n ${r[2]}"><div><b>${r[0]} ${r[1]}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}</div>${(isAdm(u)||a.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
+ const list=[...(mine||[])].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return`<div class="n ${r[2]}"><div><b>${r[0]} ${r[1]}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}</div>${(isAdm(u)||a.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
  return hint('🚫','Пропуски','Все отмеченные пропуски.')+form+`<div class="card"><h2>Журнал пропусков</h2>${list||'<p class="mut">Нет пропусков 👍</p>'}</div>`}
 function behView(u){
  const T={good:'🟢 Хорошо',bad:'🔴 Замечание',neu:'🔵 Заметка'},can=canTeach(u),kids=u.kids||[];
@@ -432,14 +432,51 @@ document.addEventListener('click',async e=>{
 document.addEventListener('change',e=>{const t=e.target;if(t.matches('[data-cls]')){st.cls=t.value;render()}else if(t.matches('[data-kid]')){st.kid=t.value;render()}else if(t.name==='role'&&t.form)applyRF();else if(t.matches('[data-logfilter]')){st.logFilter=t.value;render()}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&e.target.matches&&e.target.matches('[data-chat]')){e.preventDefault();e.target.form.requestSubmit()}});
 document.addEventListener('input',e=>{const t=e.target;if(t.matches('[data-fix]')){const v=t.value.replace(/[^A-Za-z0-9_.!@#]/g,'');if(v!==t.value)t.value=v}else if(t.matches('[data-q]')){st.q=t.value;render()}else if(t.matches('[data-logq]')){st.logQ=t.value;render()}});
-function openQuick(cell){const[subject,cls]=cell.split('|');const box=document.getElementById('quickbox');const pick=Array.from({length:10},(_,i)=>`<label><input type="radio" name="v" value="${i+1}"><span class="gr ${gc(i+1)}">${i+1}</span></label>`).join('');
+function openQuick(cell){
+ const [subject,cls]=cell.split('|');
+ const box=document.getElementById('quickbox');
+ const pick=Array.from({length:10},(_,i)=>`<label><input type="radio" name="v" value="${i+1}"><span class="gr ${gc(i+1)}">${i+1}</span></label>`).join('');
  const stuList=students().filter(s=>s.cls===cls).map(s=>`<option value="${esc(s.nick)}">${esc(s.name||'')}</option>`).join('');
+ 
+ const daysWithSubj = [...new Set(S.sched.filter(s=>s.cls===cls && s.subject===subject).map(s=>+s.day))];
+ const today = new Date(); today.setHours(0,0,0,0);
+ const currentDay = (today.getDay()+6)%7;
+ 
+ let dates = [];
+ daysWithSubj.forEach(d => {
+   let diff = d - currentDay;
+   let dt = new Date(today);
+   dt.setDate(dt.getDate() + diff);
+   dates.push(dkey(dt));
+ });
+ if(dates.length === 0) dates.push(dkey(today));
+
+ const dateOptions = dates.map(dStr => `<option value="${dStr}">${new Date(dStr+'T12:00:00').toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'short'})}</option>`).join('');
+
  box.innerHTML=`<h3>${esc(subject)} · ${esc(cls)}</h3><p class="mut">Оценка по клеточкам</p>
- <div class="row" style="margin-bottom:10px"><label>Ученик<select id="qstu">${stuList}</select></label></div>
+ <div class="row" style="margin-bottom:10px">
+   <label>Ученик<select id="qstu">${stuList}</select></label>
+   <label>Дата<select id="qdate">${dateOptions}</select></label>
+ </div>
  <div class="pick">${pick}</div><div class="row" style="margin-top:10px"><button class="b" id="qok">Поставить</button><button class="s" id="qno">Отмена</button></div>`;
+ 
  document.getElementById('quick').classList.add('show');
  document.getElementById('qno').onclick=()=>document.getElementById('quick').classList.remove('show');
- document.getElementById('qok').onclick=async()=>{const v=box.querySelector('input[name=v]:checked');if(!v)return toast('Выберите оценку');const u=me();if(!isAdm(u)&&!canTeach(u))return toast('Нет прав');const stu=document.getElementById('qstu').value;if(!stu)return toast('Нет ученика');await put('grades',uid(),{stu,subject,value:+v.value,by:u.nick,ts:Date.now()});log('grade',{stu,subject,value:+v.value});document.getElementById('quick').classList.remove('show');toast('✅');render()}}
+ document.getElementById('qok').onclick=async()=>{
+   const v=box.querySelector('input[name=v]:checked');
+   if(!v)return toast('Выберите оценку');
+   const u=me();if(!isAdm(u)&&!canTeach(u))return toast('Нет прав');
+   const stu=document.getElementById('qstu').value;
+   const date=document.getElementById('qdate').value;
+   if(!stu||!date)return toast('Выберите ученика и дату');
+   const ts=new Date(date+'T12:00:00').getTime();
+   await put('grades',uid(),{stu,subject,value:+v.value,by:u.nick,ts});
+   log('grade',{stu,subject,value:+v.value,date});
+   document.getElementById('quick').classList.remove('show');
+   toast('✅ Оценка добавлена на ' + date);
+   render();
+ }
+}
 function downloadTxt(name,text){const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`motycaly-${name}-${dkey(Date.now())}.txt`;a.click();URL.revokeObjectURL(a.href)}
 function buildLogsTxt(){let s='=== LOGS ===\n';S.logs.sort((a,b)=>b.ts-a.ts).forEach(l=>{s+=`[${fmt(l.ts)}] ${l.ev} | ${l.by} | ${JSON.stringify(l.data||{})}\n`});return s}
 function buildBackupTxt(){let s='=== MOTYCALY SCHOOL BACKUP ===\n'+new Date().toISOString()+'\n\n';
