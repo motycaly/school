@@ -165,8 +165,7 @@ button.b,button.s{position:relative;overflow:hidden}button.b:active{transform:sc
 
 
 💾 Сохранить данные для входа?В следующий раз вы войдёте без ввода пароля на этом устройстве.✅ Да, сохранить❌ Нет
-  // === КОНЕЦ ЧАСТИ 1 ===
-  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEYS=['users','auth','secrets','grades','notes','abs','news','sched','settings','signs','hw','hwproposals','complaints','chat','logs'];
 const S={};KEYS.forEach(k=>S[k]=[]);
 const loaded={};let db=null,sess=null,tab=null,lastTab=null,err='',sync=Date.now(),st={cls:'',kid:'',rf:'all',q:'',sure:'',calDate:null,calSubj:null,logFilter:'all',logQ:''};
@@ -244,25 +243,22 @@ function overView(u){
 const g=S.grades,cnt=Array.from({length:10},(,i)=>g.filter(x=>x.value===i+1).length),mx=Math.max(1,...cnt);
 return hint('📊','Обзор школы','Вся школа в цифрах.')+<div class="card"><div class="stats"> <div class="stat"><b>${students().length}</b>учеников</div><div class="stat"><b>${S.users.filter(x=>x.role==='teacher').length}</b>учителей</div><div class="stat"><b>${S.users.filter(x=>x.role==='parent').length}</b>родителей</div> <div class="stat"><b>${classes().length}</b>классов</div><div class="stat"><b>${g.length}</b>оценок</div><div class="stat"><b>${avg(g)}</b>средний</div> <div class="stat"><b>${S.notes.filter(n=>n.type==='bad').length}</b>замечаний</div><div class="stat"><b>${S.hwproposals.filter(p=>p.status==='pending').length}</b>ДЗ на модерации</div><div class="stat"><b>${S.complaints.filter(p=>p.status==='pending').length}</b>жалоб</div></div></div> <div class="card"><h2>Какие оценки ставят</h2><div class="bars">${cnt.map((c,i)=>${c}${i+1}).join('')}</div></div>}
 function usersView(u){
-const q=st.q.toLowerCase(),cre=isCre(u),SM=secMap();
-const list=S.users.filter(t=>(st.rf==='all'||t.role===st.rf)&&(!q||((t.name||'')+' '+t.nick+' '+(t.cls||'')).toLowerCase().includes(q))).sort((a,b)=>(a.role||'').localeCompare(b.role||'')||(a.name||'').localeCompare(b.name||'','ru'));
-const rows=list.map(t=>{const ex=t.role==='student'?esc(t.cls||''):t.role==='teacher'?esc(t.subject||''):t.role==='parent'?(t.kids||[]).map(name).join(', '):'';const sec=SM[t.nick],m=canMan(u,t),key='users:'+t.nick;
-return<tr><td><b>${esc(t.name||'')}</b><div class="mut">${ICON[t.role]} ${ROLE[t.role]} ${ex?'· '+ex:''}</div></td><td><code>${esc(t.nick)}</code></td>${cre?${sec?<code class="pwv">${esc(sec.pw)}</code> <button class="s ok" data-copy="${esc(t.nick)} / ${esc(sec.pw)}">📋</button>:'—'}`:''}
-{m?`{editF(t)}Сменить{t.nick!==sess?`<button type="button" class="s" data-del="{key}">${st.sure===key?'Точно?':'Удалить'}:''}</form>:'—'}
-`}).join('');
-const roles=['all',...(cre?['admin','staff']:[]),'teacher','parent','student'];
-return hint('👥','Люди и пароли',cre?'Вы видите все пароли.':'Пароли видит только создатель.')+
-`➕ Новый аккаунтРоль🎒 Ученик👩‍🏫 Учитель👨‍👩‍👧 Родитель${cre?'🛡️ Администратор':''}
-Имя
-Логин
-${pwBox('pw','Пароль',true,true)}🎲
-Класс
-Предмет
-Дети{students().map(s=>`<option value="{esc(s.nick)}">\({esc(s.name||'')} (\){esc(s.cls||'')})`).join('')}
-Создать
-Все аккаунты (${S.users.length})${roles.map(r=><button class="chip ${st.rf===r?'on':''}" data-rf="${r}">${r==='all'?'Все':ICON[r]+' '+ROLE[r]}</button>).join('')}
-ЧеловекЛогин${cre?'Пароль':''}Действия${rows||'Пусто'}} const editF=t=>t.role==='student'?Класс:t.role==='teacher'?Предмет`:'';
-// === КОНЕЦ ЧАСТИ 2 ===
+ const q=st.q.toLowerCase(),cre=isCre(u),SM=secMap();
+ const list=S.users.filter(t=>(st.rf==='all'||t.role===st.rf)&&(!q||((t.name||'')+' '+t.nick+' '+(t.cls||'')).toLowerCase().includes(q))).sort((a,b)=>(a.role||'').localeCompare(b.role||'')||(a.name||'').localeCompare(b.name||'','ru'));
+ const rows=list.map(t=>{const ex=t.role==='student'?esc(t.cls||''):t.role==='teacher'?esc(t.subject||''):t.role==='parent'?(t.kids||[]).map(name).join(', '):'';const sec=SM[t.nick],m=canMan(u,t),key='users:'+t.nick;
+  return`<tr><td><b>${esc(t.name||'')}</b><div class="mut">${ICON[t.role]} ${ROLE[t.role]} ${ex?'· '+ex:''}</div></td><td><code>${esc(t.nick)}</code></td>${cre?`<td>${sec?`<code class="pwv">${esc(sec.pw)}</code> <button class="s ok" data-copy="${esc(t.nick)} / ${esc(sec.pw)}">📋</button>`:'<span class="mut">—</span>'}</td>`:''}
+  <td>${m?`${editF(t)}<form data-f="pw" data-nick="${esc(t.nick)}" class="row2"><input data-fix name="pw" placeholder="новый пароль" required pattern="[A-Za-z0-9_.!@#]{4,32}"><button class="s ok">Сменить</button>${t.nick!==sess?`<button type="button" class="s" data-del="${key}">${st.sure===key?'Точно?':'Удалить'}</button>`:''}</form>`:'<span class="mut">—</span>'}</td></tr>`}).join('');
+ const roles=['all',...(cre?['admin','staff']:[]),'teacher','parent','student'];
+ return hint('👥','Люди и пароли',cre?'Вы видите все пароли.':'Пароли видит только создатель.')+
+ `<div class="card"><h2>➕ Новый аккаунт</h2><form data-f="adduser" class="row rf r-student"><label>Роль<select name="role"><option value="student">🎒 Ученик</option><option value="teacher">👩‍🏫 Учитель</option><option value="parent">👨‍👩‍👧 Родитель</option>${cre?'<option value="staff">🛡️ Администратор</option>':''}</select></label>
+ <label>Имя<input name="name" required></label><label>Логин<input name="nick" required pattern="[A-Za-z0-9_.\\-]{3,}"></label>
+ ${pwBox('pw','Пароль',true,true)}<button type="button" class="s" data-gen>🎲</button>
+ <label class="fs">Класс<input name="cls" placeholder="5А"></label><label class="ft">Предмет<input name="subject"></label>
+ <label class="fp">Дети<select name="kids" multiple size="4">${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name||'')} (${esc(s.cls||'')})</option>`).join('')}</select></label>
+ <button class="b">Создать</button></form><div class="err" id="fe"></div></div>
+ <div class="card"><h2>Все аккаунты (${S.users.length})</h2>${roles.map(r=>`<button class="chip ${st.rf===r?'on':''}" data-rf="${r}">${r==='all'?'Все':ICON[r]+' '+ROLE[r]}</button>`).join('')}
+ <input data-q placeholder="🔍 Поиск" value="${esc(st.q)}" style="margin:6px 0 12px"><div class="wrap"><table><tr><th>Человек</th><th>Логин</th>${cre?'<th>Пароль</th>':''}<th>Действия</th></tr>${rows||'<tr><td colspan="4" class="mut">Пусто</td></tr>'}</table></div></div>`}
+const editF=t=>t.role==='student'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="cls" value="${esc(t.cls||'')}" placeholder="класс" style="width:80px"><button class="s ok">Класс</button></form>`:t.role==='teacher'?`<form data-f="setinfo" data-nick="${esc(t.nick)}" class="row2" style="margin-bottom:6px"><input name="subject" value="${esc(t.subject||'')}" placeholder="предмет" style="width:130px"><button class="s ok">Предмет</button></form>`:'';
 function gradesView(u){
  const cl=classes();
  if(!cl.length) return hint('📝','Журнал','')+'<div class="card"><p class="mut">В системе пока нет классов и учеников. Добавьте их во вкладке «Люди».</p></div>';
@@ -314,57 +310,61 @@ function hwPropView(u){
  const c=classOf(u),subs=subjOf(c);
  const pend=S.hwproposals.filter(p=>p.by===u.nick&&p.status==='pending').length;
  return hint('📝','Предложить ДЗ','Ваше предложение уйдёт админу на согласование. После одобрения появится у всех.')+
- `<div class="card"><h2>➕ Предложить</h2>${pend>=5?'<p class="mut">Слишком много ожидающих. Дождитесь проверки.</p>':`<form data-f="hwprop"><div class="row"><label>Класс<input value="${esc(c)}" readonly></label><label>Предмет<select name="subject">${subs.map(s=>`<option>${esc(s)}</option>`).join('')}</select></label><label>На когда<input type="date" name="due" value="${dkey(Date.now()+864e5)}" required></label></div><br><label>Задание<textarea name="text" rows="2" required></textarea></label><br><button class="b">Отправить админу</button></form>`}</div>
- <div class="card"><h2>Мои предложения</h2>${S.hwproposals.filter(p=>p.by===u.nick).sort((a,b)=>b.ts-a.ts).slice(0,30).map(p=>`<div class="n ${p.status==='approved'?'good':p.status==='rejected'?'bad':'neu'}"><div><b>${esc(p.subject||'')}</b> → ${p.status}<br>${esc(p.text||'')}<br><span class="mut">${fmt(p.ts)}</span></div></div>`).join('')||'<p class="mut">Нет</p>'}</div>`}
+<div class="card"><h2>➕ Предложить</h2>${pend>=5?'<p class="mut">Слишком много ожидающих. Дождитесь проверки.</p>':КлассПредмет${subs.map(s=><option>${esc(s)}</option>).join('')}На когда
+Задание
+Отправить админу}</div> <div class="card"><h2>Мои предложения</h2>${S.hwproposals.filter(p=>p.by===u.nick).sort((a,b)=>b.ts-a.ts).slice(0,30).map(p=>${esc(p.subject||'')} → ${p.status}
+${esc(p.text||'')}
+${fmt(p.ts)}).join('')||'<p class="mut">Нет</p>'}</div>}
 function hwModView(u){
- if(!isAdm(u))return hint('⛔','Нет доступа','');
- LS.set('sch_seen_'+u.nick+'_hwmod',String(Date.now()));
- const list=S.hwproposals.filter(p=>p.status==='pending').sort((a,b)=>a.ts-b.ts);
- return hint('✅','Согласование ДЗ','Одобрите — попадёт в «Домашку».')+`<div class="card"><h2>Ожидают (${list.length})</h2>${list.map(p=>`<div class="n neu"><div><b>${esc(p.subject||'')}</b> · класс ${esc(p.cls||'')} · на ${new Date(p.due).toLocaleDateString('ru-RU')}<br>${esc(p.text||'')}<br><span class="mut">${name(p.by)} · ${fmt(p.ts)}</span></div><div><button class="s ok" data-hwok="${p.id}">✅</button><button class="s" data-hwno="${p.id}">❌</button></div></div>`).join('')||'<p class="mut">Пусто</p>'}</div>`}
+if(!isAdm(u))return hint('⛔','Нет доступа','');
+LS.set('sch_seen_'+u.nick+'_hwmod',String(Date.now()));
+const list=S.hwproposals.filter(p=>p.status==='pending').sort((a,b)=>a.ts-b.ts);
+return hint('✅','Согласование ДЗ','Одобрите — попадёт в «Домашку».')+<div class="card"><h2>Ожидают (${list.length})</h2>${list.map(p=>${esc(p.subject||'')} · класс ${esc(p.cls||'')} · на ${new Date(p.due).toLocaleDateString('ru-RU')}
+${esc(p.text||'')}
+${name(p.by)} · ${fmt(p.ts)}✅❌).join('')||'<p class="mut">Пусто</p>'}</div>}
 const RS={sick:['🤒','Болезнь','neu'],exc:['📄','Уважительная','neu'],none:['❌','Без уважительной','bad']};
 function absView(u){
- const can=canTeach(u),kids=u.kids||[],mine=can?S.abs:S.abs.filter(a=>u.role==='student'?a.stu===u.nick:kids.includes(a.stu));
- const form=can?`<div class="card"><h2>➕ Отметить пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>`<option value="${esc(s.nick)}">${esc(s.name||'')} (${esc(s.cls||'')})</option>`).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">Болезнь</option><option value="exc">Уважительная</option><option value="none">Без уважительной</option></select></label></div><br><button class="b">Отметить</button></form></div>`:'';
- const list=[...(mine||[])].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return`<div class="n ${r.at(2)}"><div><b>${r.at(0)} ${r.at(1)}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}</div>${(isAdm(u)||a.by===u.nick)?`<button class="s" data-del="${k}">✕</button>`:''}</div>`}).join('');
- return hint('🚫','Пропуски','Все отмеченные пропуски.')+form+`<div class="card"><h2>Журнал пропусков</h2>${list||'<p class="mut">Нет пропусков 👍</p>'}</div>`}
+const can=canTeach(u),kids=u.kids||[],mine=can?S.abs:S.abs.filter(a=>u.role==='student'?a.stu===u.nick:kids.includes(a.stu));
+const form=can?<div class="card"><h2>➕ Отметить пропуск</h2><form data-f="addabs"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>${esc(s.name||'')} (${esc(s.cls||'')})).join('')}</select></label><label>Дата<input type="date" name="date" value="${dkey(Date.now())}" required></label><label>Причина<select name="reason"><option value="sick">Болезнь</option><option value="exc">Уважительная</option><option value="none">Без уважительной</option></select></label></div><br><button class="b">Отметить</button></form></div>:'';
+const list=[...(mine||[])].sort((a,b)=>b.date-a.date).slice(0,60).map(a=>{const r=RS[a.reason]||RS.none,k='abs:'+a.id;return<div class="n ${r.at(2)}"><div><b>${r.at(0)} ${r.at(1)}</b>${can||u.role==='parent'?' — '+name(a.stu):''} · ${new Date(a.date).toLocaleDateString('ru-RU')}</div>${(isAdm(u)||a.by===u.nick)?✕:''}</div>}).join('');
+return hint('🚫','Пропуски','Все отмеченные пропуски.')+form+<div class="card"><h2>Журнал пропусков</h2>${list||'<p class="mut">Нет пропусков 👍</p>'}</div>}
 function behView(u){
- const T={good:'🟢 Хорошо',bad:'🔴 Замечание',neu:'🔵 Заметка'},can=canTeach(u),kids=u.kids||[];
- const mine=can?S.notes:S.notes.filter(n=>u.role==='student'?n.stu===u.nick:kids.includes(n.stu));
+const T={good:'🟢 Хорошо',bad:'🔴 Замечание',neu:'🔵 Заметка'},can=canTeach(u),kids=u.kids||[];
+const mine=can?S.notes:S.notes.filter(n=>u.role==='student'?n.stu===u.nick:kids.includes(n.stu));
 const form=can?<div class="card"><h2>➕ Запись о поведении</h2><form data-f="addnote"><div class="row"><label>Ученик<select name="stu" required>${students().map(s=>${esc(s.name||'')} (${esc(s.cls||'')})).join('')}</select></label><label>Тип<select name="type"><option value="good">Хорошо</option><option value="bad">Замечание</option><option value="neu">Заметка</option></select></label></div><br><label>Текст<input name="text" required></label><br><button class="b">Добавить</button></form></div>:'';
 const list=[...mine].sort((a,b)=>b.ts-a.ts).map(n=>{const k='notes:'+n.id;return<div class="n ${n.type}"><div><b>${T[n.type]||''}</b>${can||u.role==='parent'?' ('+name(n.stu)+')':''}: ${esc(n.text||'')}<br><span class="mut">${name(n.by)} · ${fmt(n.ts)}</span></div>${(isAdm(u)||n.by===u.nick)?✕:''}</div>}).join('');
-return hint('🎭','Поведение','Записи о поведении.')+form+<div class="card">${list||'<p class="mut">Записей нет</p>'}</div>}
+return hint('🎭','Поведение','Записи о поведении.')+form+<div class="card">${list||'<p class="mut">Записей нет</p>'}</div>}            
 function schedView(u){
-const c=classOf(u),cl=classes(),today=new Date();today.setHours(0,0,0,0);
-const di=(today.getDay()+6)%7;
-const can=canTeach(u);
-const clsStuNicks=new Set(students().filter(s=>s.cls===c).map(s=>s.nick));
-let targetNick=u.nick;
-if(u.role==='parent'){const kids=(u.kids||[]).filter(n=>byNick(n));targetNick=st.kid&&kids.includes(st.kid)?st.kid:(kids.at(0)||'')}
-let html='Расписание '+(c?'· Класс '+esc(c):'')+'';
-if(can&&cl.length)html+=<label style="max-width:200px;margin-bottom:12px">Класс<select data-cls>${cl.map(x=><option ${x===c?'selected':''}>${esc(x)}).join('')}</select></label>;
-if(u.role==='parent'&&(u.kids||[]).length>1){const kids=(u.kids||[]).filter(n=>byNick(n));html+=<label style="max-width:240px;margin-bottom:12px">Ребёнок<select data-kid>${kids.map(n=><option value="${esc(n)}" ${n===targetNick?'selected':''}>${esc(byNick(n).name||'')}).join('')}</select></label>}
-for(let d=0;d<5;d++){
-const dt=new Date(today);dt.setDate(dt.getDate()+(d-di));
-const dk=dkey(dt);
-const dd=dt.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'2-digit'});
-const items=S.sched.filter(s=>s.cls===c&&+s.day===d).sort((a,b)=>+a.lesson-+b.lesson);
-html+=<div class="sched-day" ${d===di?'style="background:rgba(91,75,232,.06);border-radius:12px;padding:8px"':''}><h3>${dd}${d===di?' · сегодня':''}</h3>;
-if(!items.length)html+='Нет уроков';
-items.forEach(s=>{
-const gs=S.grades.filter(g=>{
-if(g.subject!==s.subject)return false;
-if(dkey(g.ts)!==dk)return false;
-if(can)return clsStuNicks.has(g.stu);
-return g.stu===targetNick;
-}).sort((a,b)=>a.ts-b.ts);
-const cellAttr=can?data-cell="${esc(s.subject)}|${esc(c)}|${dk}":'';
-html+=<div class="sched-item"><span class="les">${s.lesson}.</span><b>${esc(s.subject||'')}</b>${s.room?'<span class="mut">к.'+esc(s.room)+'</span>':''}<span class="cell-grades ${can?'can':''}" ${cellAttr} title="${can?'Нажмите, чтобы поставить оценку':''}">${gs.map(g=>chip(g,can)).join('')||(can?'<span class="mut" style="font-size:11px">+</span>':'')}</span></div>
-});
-html+=''}
-html+='';
-if(isAdm(u))html+=<div class="card"><h3>➕ Урок</h3><form data-f="addsched" class="row"><label>Класс<input name="cls" value="${esc(c)}" required></label><label>День<select name="day">${DAYS.map((x,i)=>${x}).join('')}</select></label><label>Урок<input type="number" name="lesson" min="1" max="8" value="1"></label><label>Предмет<select name="subject">${subjOf(c).map(s=>${esc(s)}).join('')}</select></label><button class="b">Добавить</button></form></div>;
-return hint('🗓️','Расписание',can?'Нажмите на клеточку рядом с предметом, чтобы поставить оценку на этот день.':'Оценки отображаются строго в день проведения урока.')+html}
-// === КОНЕЦ ЧАСТИ 3A ===
+ const c=classOf(u),cl=classes(),today=new Date();today.setHours(0,0,0,0);
+ const di=(today.getDay()+6)%7;
+ const can=canTeach(u);
+ const clsStuNicks=new Set(students().filter(s=>s.cls===c).map(s=>s.nick));
+ let targetNick=u.nick;
+ if(u.role==='parent'){const kids=(u.kids||[]).filter(n=>byNick(n));targetNick=st.kid&&kids.includes(st.kid)?st.kid:(kids.at(0)||'')}
+ let html='<div class="card"><h2>Расписание '+(c?'· Класс '+esc(c):'')+'</h2>';
+ if(can&&cl.length)html+=`<label style="max-width:200px;margin-bottom:12px">Класс<select data-cls>${cl.map(x=>`<option ${x===c?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`;
+ if(u.role==='parent'&&(u.kids||[]).length>1){const kids=(u.kids||[]).filter(n=>byNick(n));html+=`<label style="max-width:240px;margin-bottom:12px">Ребёнок<select data-kid>${kids.map(n=>`<option value="${esc(n)}" ${n===targetNick?'selected':''}>${esc(byNick(n).name||'')}</option>`).join('')}</select></label>`}
+ for(let d=0;d<5;d++){
+  const dt=new Date(today);dt.setDate(dt.getDate()+(d-di));
+  const dk=dkey(dt);
+  const dd=dt.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'2-digit'});
+  const items=S.sched.filter(s=>s.cls===c&&+s.day===d).sort((a,b)=>+a.lesson-+b.lesson);
+  html+=`<div class="sched-day" ${d===di?'style="background:rgba(91,75,232,.06);border-radius:12px;padding:8px"':''}><h3>${dd}${d===di?' · сегодня':''}</h3>`;
+  if(!items.length)html+='<span class="mut">Нет уроков</span>';
+  items.forEach(s=>{
+    const gs=S.grades.filter(g=>{
+      if(g.subject!==s.subject)return false;
+      if(dkey(g.ts)!==dk)return false;
+      if(can)return clsStuNicks.has(g.stu);
+      return g.stu===targetNick;
+    }).sort((a,b)=>a.ts-b.ts);
+    const cellAttr=can?`data-cell="${esc(s.subject)}|${esc(c)}|${dk}"`:'';
+    html+=`<div class="sched-item"><span class="les">${s.lesson}.</span><b>${esc(s.subject||'')}</b>${s.room?'<span class="mut">к.'+esc(s.room)+'</span>':''}<span class="cell-grades ${can?'can':''}" ${cellAttr} title="${can?'Нажмите, чтобы поставить оценку':''}">${gs.map(g=>chip(g,can)).join('')||(can?'<span class="mut" style="font-size:11px">+</span>':'')}</span></div>`
+  });
+  html+='</div>'}
+ html+='</div>';
+ if(isAdm(u))html+=`<div class="card"><h3>➕ Урок</h3><form data-f="addsched" class="row"><label>Класс<input name="cls" value="${esc(c)}" required></label><label>День<select name="day">${DAYS.map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select></label><label>Урок<input type="number" name="lesson" min="1" max="8" value="1"></label><label>Предмет<select name="subject">${subjOf(c).map(s=>`<option>${esc(s)}</option>`).join('')}</select></label><button class="b">Добавить</button></form></div>`;
+ return hint('🗓️','Расписание',can?'Нажмите на клеточку рядом с предметом, чтобы поставить оценку на этот день.':'Оценки отображаются строго в день проведения урока.')+html}
 function newsView(u){
  const n=[...S.news].sort((a,b)=>b.ts-a.ts).slice(0,50);
  const form=canTeach(u)?`<div class="card"><h2>➕ Новость</h2><form data-f="addnews"><label>Заголовок<input name="title" required></label><br><label>Текст<textarea name="text" rows="3" required></textarea></label><br><button class="b">Опубликовать</button></form></div>`:'';
@@ -410,28 +410,28 @@ function restore(s){if(!s||s.tab!==tab)return;const els=[...document.querySelect
 function applyRF(){document.querySelectorAll('form.rf').forEach(f=>{f.className='row rf r-'+f.elements.role.value})}
 function render(){
  const a=document.getElementById('app');
- if(err){a.innerHTML=`<div class="closed"><div class="big">⚠️</div><h2>${esc(err)}</h2></div>`;return}
- if(Object.keys(loaded).length<KEYS.length){a.innerHTML=splash();return}
- let u=sess?me():null;if(sess&&!u){logout();u=null}
- if(u&&sessH){const A=S.auth.find(a=>a.id===u.nick)||u;if(A.hash&&A.hash!==sessH){logout();u=null}}
- wasClosed=closedNow();
- if(closedNow()&&!isAdm(u)){a.innerHTML=closedView(u);return}
- if(!u){a.innerHTML=loginView();lastTab=null;return}
- const s=snap(),V={me:meView,over:overView,users:usersView,grades:gradesView,diary:diaryView,kid:kidView,hw:hwView,hwprop:hwPropView,hwmod:hwModView,abs:absView,beh:behView,sched:schedView,news:newsView,chat:chatView,comp:compView,compmod:compModView,logs:logsView,set:setView};
- if(!tab)tab=LS.get('sch_tab_'+u.nick);const t=TABS[u.role];if(!t.find(x=>x.at(0)===tab))tab=t.at(0).at(0);
- s.tab=tab===lastTab?tab:null;const anim=tab!==lastTab;
- const cb0=document.getElementById('chatbox'),nb=!cb0||cb0.scrollHeight-cb0.scrollTop-cb0.clientHeight<90;
- a.innerHTML=shell(u,V[tab](u),anim);lastTab=tab;applyRF();restore(s.tab?s:null);if(anim||nb){const cb=document.getElementById('chatbox');if(cb)cb.scrollTop=cb.scrollHeight}}
-const splash=()=>`<div class="splash"><div class="spin"></div><h2>Загружаем…</h2><div class="prog"><i style="width:${Math.round(Object.keys(loaded).length/KEYS.length*100)}%"></i></div></div>`;
-function loginView(){if(!S.users.length)return`<div class="hero"><div class="card"><h2>👑 Первый запуск</h2><form data-f="setup"><label>Имя<input name="name" required></label><label>Логин<input name="nick" required></label>${pwBox('pw','Пароль',false,true)}<button class="b">Создать</button></form><div class="err" id="fe"></div></div></div>`;
- return`<div class="hero"><div class="card"><h2>🔑 Вход</h2><form data-f="login"><label>Логин<input name="nick" required></label>${pwBox('pw','Пароль',false,false)}<button class="b" style="width:100%">Войти</button></form><div class="err" id="fe"></div></div></div>`}
-function closedView(u){return`<div class="closed"><div class="gear">⚙️</div><h1>Техработы</h1><p data-cd>${esc(cdText())}</p></div>`}
+if(err){a.innerHTML=<div class="closed"><div class="big">⚠️</div><h2>${esc(err)}</h2></div>;return}
+if(Object.keys(loaded).length<KEYS.length){a.innerHTML=splash();return}
+let u=sess?me():null;if(sess&&!u){logout();u=null}
+if(u&&sessH){const A=S.auth.find(a=>a.id===u.nick)||u;if(A.hash&&A.hash!==sessH){logout();u=null}}
+wasClosed=closedNow();
+if(closedNow()&&!isAdm(u)){a.innerHTML=closedView(u);return}
+if(!u){a.innerHTML=loginView();lastTab=null;return}
+const s=snap(),V={me:meView,over:overView,users:usersView,grades:gradesView,diary:diaryView,kid:kidView,hw:hwView,hwprop:hwPropView,hwmod:hwModView,abs:absView,beh:behView,sched:schedView,news:newsView,chat:chatView,comp:compView,compmod:compModView,logs:logsView,set:setView};
+if(!tab)tab=LS.get('sch_tab_'+u.nick);const t=TABS[u.role];if(!t.find(x=>x.at(0)===tab))tab=t.at(0).at(0);
+s.tab=tab===lastTab?tab:null;const anim=tab!==lastTab;
+const cb0=document.getElementById('chatbox'),nb=!cb0||cb0.scrollHeight-cb0.scrollTop-cb0.clientHeight<90;
+a.innerHTML=shell(u,Vtab,anim);lastTab=tab;applyRF();restore(s.tab?s:null);if(anim||nb){const cb=document.getElementById('chatbox');if(cb)cb.scrollTop=cb.scrollHeight}}
+const splash=()=><div class="splash"><div class="spin"></div><h2>Загружаем…</h2><div class="prog"><i style="width:${Math.round(Object.keys(loaded).length/KEYS.length*100)}%"></i></div></div>;
+function loginView(){if(!S.users.length)return<div class="hero"><div class="card"><h2>👑 Первый запуск</h2><form data-f="setup"><label>Имя<input name="name" required></label><label>Логин<input name="nick" required></label>${pwBox('pw','Пароль',false,true)}<button class="b">Создать</button></form><div class="err" id="fe"></div></div></div>;
+return<div class="hero"><div class="card"><h2>🔑 Вход</h2><form data-f="login"><label>Логин<input name="nick" required></label>${pwBox('pw','Пароль',false,false)}<button class="b" style="width:100%">Войти</button></form><div class="err" id="fe"></div></div></div>}
+function closedView(u){return<div class="closed"><div class="gear">⚙️</div><h1>Техработы</h1><p data-cd>${esc(cdText())}</p></div>}
 document.addEventListener('click',async e=>{
- const t=e.target.closest('[data-tab],[data-del],[data-act],[data-eye],[data-gen],[data-rf],[data-theme-toggle],[data-copy],[data-caldate],[data-hwok],[data-hwno],[data-cok],[data-cno],[data-cot],[data-logtxt],[data-backup],[data-bell],[data-cell]');if(!t)return;
- if(t.dataset.tab){tab=t.dataset.tab;LS.set('sch_tab_'+sess,tab);render()}
- else if(t.dataset.act==='out'){log('logout');logout();render()}
- else if(t.hasAttribute('data-eye')){const i=t.previousElementSibling;i.type=i.type==='password'?'text':'password'}
- else if(t.hasAttribute('data-gen')){const f=t.closest('form'),c='abcdefghjkmnpqrstuvwxyz23456789';f.elements.pw.value=Array.from({length:8},()=>c.at(Math.floor(Math.random()*c.length))).join('')}
+const t=e.target.closest('[data-tab],[data-del],[data-act],[data-eye],[data-gen],[data-rf],[data-theme-toggle],[data-copy],[data-caldate],[data-hwok],[data-hwno],[data-cok],[data-cno],[data-cot],[data-logtxt],[data-backup],[data-bell],[data-cell]');if(!t)return;
+if(t.dataset.tab){tab=t.dataset.tab;LS.set('sch_tab_'+sess,tab);render()}
+else if(t.dataset.act==='out'){log('logout');logout();render()}
+else if(t.hasAttribute('data-eye')){const i=t.previousElementSibling;i.type=i.type==='password'?'text':'password'}
+else if(t.hasAttribute('data-gen')){const f=t.closest('form'),c='abcdefghjkmnpqrstuvwxyz23456789';f.elements.pw.value=Array.from({length:8},()=>c.at(Math.floor(Math.random()*c.length))).join('')}
 else if(t.dataset.rf){st.rf=t.dataset.rf;render()}
 else if(t.hasAttribute('data-theme-toggle')){const r=document.documentElement,cur=r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;LS.set('sch_theme',nx)}
 else if(t.hasAttribute('data-copy')){try{await navigator.clipboard.writeText(t.dataset.copy);toast('📋')}catch(x){toast(t.dataset.copy)}}
@@ -453,37 +453,27 @@ const [subject,cls,targetDate]=cell.split('|');
 const box=document.getElementById('quickbox');
 const pick=Array.from({length:10},(_,i)=><label><input type="radio" name="v" value="${i+1}"><span class="gr ${gc(i+1)}">${i+1}</span></label>).join('');
 const stuList=students().filter(s=>s.cls===cls).map(s=><option value="${esc(s.nick)}">${esc(s.name||'')}</option>).join('');
-const daysWithSubj = [...new Set(S.sched.filter(s=>s.cls===cls && s.subject===subject).map(s=>+s.day))];
-const today = new Date(); today.setHours(0,0,0,0);
-const currentDay = (today.getDay()+6)%7;
-let dates = [];
-daysWithSubj.forEach(d => {
-let dt = new Date(today);
-dt.setDate(dt.getDate() + (d - currentDay));
-dates.push(dkey(dt));
-});
-if(targetDate && !dates.includes(targetDate)) dates.unshift(targetDate);
-if(dates.length === 0) dates.push(dkey(today));
-const dateOptions = dates.map(dStr => <option value="${dStr}" ${dStr===targetDate?'selected':''}>${new Date(dStr+'T12:00:00').toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'short'})}</option>).join('');
-box.innerHTML=`${esc(subject)} · ${esc(cls)}Оценка по клеточкам
-Ученик${stuList}
-Дата${dateOptions}
-${pick}ПоставитьОтмена`;
+const daysWithSubj=[...new Set(S.sched.filter(s=>s.cls===cls&&s.subject===subject).map(s=>+s.day))];
+const today=new Date();today.setHours(0,0,0,0);
+const currentDay=(today.getDay()+6)%7;
+let dates=[];
+daysWithSubj.forEach(d=>{let dt=new Date(today);dt.setDate(dt.getDate()+(d-currentDay));dates.push(dkey(dt))});
+if(targetDate&&!dates.includes(targetDate))dates.unshift(targetDate);
+if(dates.length===0)dates.push(dkey(today));
+const dateOptions=dates.map(dStr=><option value="${dStr}" ${dStr===targetDate?'selected':''}>${new Date(dStr+'T12:00:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'})}</option>).join('');
+box.innerHTML=<h3>${esc(subject)} · ${esc(cls)}</h3><p class="mut">Оценка по клеточкам</p><div class="row" style="margin-bottom:10px"><label>Ученик<select id="qstu">${stuList}</select></label><label>Дата<select id="qdate">${dateOptions}</select></label></div><div class="pick">${pick}</div><div class="row" style="margin-top:10px"><button class="b" id="qok">Поставить</button><button class="s" id="qno">Отмена</button></div>;
 document.getElementById('quick').classList.add('show');
 document.getElementById('qno').onclick=()=>document.getElementById('quick').classList.remove('show');
 document.getElementById('qok').onclick=async()=>{
-const v=box.querySelector('input[name=v]:checked');
-if(!v)return toast('Выберите оценку');
+const v=box.querySelector('input[name=v]:checked');if(!v)return toast('Выберите оценку');
 const u=me();if(!canTeach(u))return toast('Нет прав');
-const stu=document.getElementById('qstu').value;
-const date=document.getElementById('qdate').value;
+const stu=document.getElementById('qstu').value,date=document.getElementById('qdate').value;
 if(!stu||!date)return toast('Выберите ученика и дату');
 const ts=new Date(date+'T12:00:00').getTime();
 await put('grades',uid(),{stu,subject,value:+v.value,by:u.nick,ts});
 log('grade',{stu,subject,value:+v.value,date});
 document.getElementById('quick').classList.remove('show');
-toast('✅ Оценка добавлена на ' + new Date(date+'T12:00:00').toLocaleDateString('ru-RU'));
-render();
+toast('✅ Оценка добавлена на '+new Date(date+'T12:00:00').toLocaleDateString('ru-RU'));render();
 }
 }
 function downloadTxt(name,text){const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=motycaly-${name}-${dkey(Date.now())}.txt;a.click();URL.revokeObjectURL(a.href)}
@@ -545,6 +535,6 @@ function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;render()}
 setInterval(()=>{const t=cdText();document.querySelectorAll('[data-cd]').forEach(e=>e.textContent=t);document.querySelectorAll('[data-sync]').forEach(e=>e.textContent=new Date(sync).toLocaleTimeString('ru-RU'))},1000);
 document.getElementById('saveYes').onclick=()=>{LS.set('sch_saved','1');if(sess)LS.set('sch_u',sess,false);if(sessH)LS.set('sch_h',sessH,false);document.getElementById('saveModal').classList.remove('show')};
 document.getElementById('saveNo').onclick=()=>{LS.del('sch_saved');if(sess)LS.set('sch_u',sess,true);if(sessH)LS.set('sch_h',sessH,true);document.getElementById('saveModal').classList.remove('show')};
-  </script>
+</script>
 </body>
 </html>
