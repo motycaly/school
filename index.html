@@ -172,6 +172,10 @@ const ROLE={admin:'Создатель',staff:'Администратор',teache
 const ICON={admin:'👑',staff:'🛡️',teacher:'👩‍🏫',parent:'👨‍👩‍👧',student:'🎒'};
 const ADM=[['over','📊 Обзор'],['users','👥 Люди'],['grades','📝 Оценки'],['hw','📚 Домашка'],['hwprop','📝 Предложить ДЗ'],['hwmod','✅ Согласовать ДЗ'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат'],['comp','🚩 Пожаловаться'],['compmod','🛡 Жалобы'],['logs','🗂 Журнал'],['set','🔧 Техработы']];
 const TABS={admin:[['me','👤 Профиль'],...ADM],staff:[['me','👤 Профиль'],...ADM],
+ teacher:[['me','👤 Профиль'],['grades','📝 Журнал'],['hw','📚 Домашка'],['hwprop','📝 Предложить ДЗ'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат'],['comp','🚩 Пожаловаться']],
+ parent:[['me','👤 Профиль'],['kid','📒 Дневник'],['hw','📚 Домашка'],['hwprop','📝 Предложить ДЗ'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['comp','🚩 Пожаловаться']],
+ student:[['me','👤 Профиль'],['diary','📒 Дневник'],['hw','📚 Домашка'],['hwprop','📝 Предложить ДЗ'],['abs','🚫 Пропуски'],['beh','🎭 Поведение'],['sched','🗓️ Расписание'],['news','📰 Новости'],['chat','💬 Чат'],['comp','🚩 Пожаловаться']]};
+const PWRE=/^[A-Za-z0-9_.!@#]{4,32}$/,PWHINT='Только латиница, цифры и символы _ . ! @ # — без пробелов, от 4 до 32 знаков';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const safeDate = ts => { if (!ts) return new Date(0); let d = new Date(ts); if (isNaN(d.getTime())) d = new Date(0); return d; };
 const fmt=t=>safeDate(t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
